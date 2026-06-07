@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Master Heat — لوحة التحكم</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a3a5c' width='100' height='100' rx='20'/><text x='50' y='65' font-size='40' font-weight='bold' fill='%23c4956a' text-anchor='middle' font-family='Georgia'>MH</text></svg>">
+<style>
+:root{--bg:#0a1628;--card:#0f1d32;--border:#1a2d4a;--navy:#1a3a5c;--navyL:#2a4f75;--rose:#c4956a;--roseD:#a07850;--silver:#b8c0cc;--chrome:#8892a4;--gold:#c9a96e;--white:#eef1f6;--green:#4ade80;--red:#f87171;--purple:#a78bfa}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--white);font-family:'Segoe UI',Tahoma,sans-serif;direction:rtl;min-height:100vh;padding-bottom:70px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--navy);border-radius:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.loader{display:flex;justify-content:center;padding:40px}
+.loader div{width:36px;height:36px;border:3px solid var(--border);border-top:3px solid var(--rose);border-radius:50%;animation:spin .8s linear infinite}
+.header{padding:14px 16px;background:linear-gradient(180deg,var(--card),var(--bg));border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--navy),var(--navyL));border:2px solid rgba(196,149,106,.27);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(196,149,106,.13)}
+.logo span{font-size:15px;font-weight:900;color:var(--rose);font-family:Georgia,serif;letter-spacing:-1px}
+.content{padding:16px 16px 0;animation:fadeIn .4s ease}
+.kpi-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.kpi{background:linear-gradient(135deg,var(--card),var(--bg));border:1px solid var(--border);border-radius:14px;padding:14px;flex:1;min-width:140px;position:relative;overflow:hidden}
+.kpi-icon{font-size:22px;margin-bottom:6px}
+.kpi-val{font-size:16px;font-weight:800;line-height:1.2}
+.kpi-label{font-size:10px;color:var(--chrome);margin-top:3px}
+.kpi-sub{font-size:9px;color:var(--navy);margin-top:1px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.badge{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;display:inline-block}
+.badge-exp{background:rgba(248,113,113,.1);color:var(--red)}
+.badge-rev{background:rgba(74,222,128,.1);color:var(--green)}
+.inv-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.inv-item:last-child{border-bottom:none}
+.filter-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.filter-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--chrome);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
+.filter-btn.active{border-color:var(--rose);background:rgba(196,149,106,.1);color:var(--rose)}
+.inv-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeIn .3s ease}
+.vat-section{border-radius:10px;padding:14px;margin-bottom:10px}
+.vat-row{display:flex;justify-content:space-between;font-size:12px;color:var(--silver);margin-bottom:4px}
+.vat-total{display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px solid rgba(255,255,255,.1);padding-top:6px}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;animation:fadeIn .3s ease}
+.proj-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:10px;overflow:hidden}
+.proj-bar-fill{height:100%;background:linear-gradient(90deg,var(--rose),var(--gold));border-radius:2px}
+.proj-stats{display:flex;gap:8px;margin-bottom:10px}
+.proj-stat{flex:1;background:var(--bg);border-radius:8px;padding:8px 10px;border:1px solid var(--border)}
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 140px)}
+.chat-messages{flex:1;overflow-y:auto;padding:12px 0;display:flex;flex-direction:column;gap:10px}
+.chat-bubble{max-width:85%;padding:10px 14px;font-size:13px;line-height:1.8;color:var(--white)}
+.chat-user{border-radius:14px 14px 4px 14px;background:var(--card);border:1px solid var(--border);align-self:flex-start}
+.chat-bot{border-radius:14px 14px 14px 4px;background:rgba(196,149,106,.07);border:1px solid rgba(196,149,106,.2);align-self:flex-end}
+.chat-input-row{display:flex;gap:8px;padding:12px 0}
+.chat-input{flex:1;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--white);font-size:14px;outline:none;direction:rtl;font-family:inherit}
+.chat-send{width:44px;height:44px;border-radius:12px;border:none;cursor:pointer;background:var(--card);color:#fff;font-size:18px}
+.chat-send.active{background:linear-gradient(135deg,var(--rose),var(--roseD))}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg,rgba(15,29,50,.93),var(--bg));border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:6px 0 14px;z-index:100}
+.nav-btn{background:none;border:none;cursor:pointer;padding:4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--navy);font-family:inherit}
+.nav-btn.active{color:var(--rose)}
+.nav-btn span.icon{font-size:20px}
+.nav-btn span.label{font-size:9px;font-weight:700;letter-spacing:.5px}
+.nav-dot{width:16px;height:2px;background:var(--rose);border-radius:1px;margin-top:1px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo"><span>MH</span></div>
+  <div><div style="font-weight:800;font-size:15px;color:var(--white);letter-spacing:.5px">MASTER HEAT</div><div style="font-size:9px;color:var(--chrome);letter-spacing:1px">GENERAL MAINTENANCE & CONTRACTING</div></div>
+  <div style="margin-right:auto;font-size:9px;color:var(--navy);text-align:left">ABU DHABI<br>UAE 🇦🇪</div>
+</div>
+
+<!-- Content -->
+<div class="content" id="content"></div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('home')" id="nav-home"><span class="icon">⬡</span><span class="label">الرئيسية</span><div class="nav-dot"></div></button>
+  <button class="nav-btn" onclick="switchTab('invoices')" id="nav-invoices"><span class="icon">📄</span><span class="label">الفواتير</span></button>
+  <button class="nav-btn" onclick="switchTab('vat')" id="nav-vat"><span class="icon">🏛</span><span class="label">الضريبة</span></button>
+  <button class="nav-btn" onclick="switchTab('projects')" id="nav-projects"><span class="icon">🏗</span><span class="label">المشاريع</span></button>
+  <button class="nav-btn" onclick="switchTab('ai')" id="nav-ai"><span class="icon">🤖</span><span class="label">المساعد</span></button>
+</div>
+
+<script>
+const SB_URL="https://mxxwdjycqfrzzvgczsng.supabase.co";
+const SB_KEY="sb_publishable_QSrkvJ6ixgykuAkkFuKRQQ_jupYblon";
+let invoices=[],currentTab="home",chatHistory=[{role:"bot",text:"مرحباً! أنا المساعد المالي لماسترهيت. اسألني عن فواتيرك ومشاريعك 🏗️"}],currentFilter="all";
+
+const fmt=n=>new Intl.NumberFormat("en-AE",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
+
+async function loadData(){
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/invoices?select=*&order=created_at.desc`,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}});
+    const d=await r.json();
+    if(Array.isArray(d))invoices=d;
+  }catch(e){console.error(e)}
+  render();
+}
+
+function getStats(){
+  const exp=invoices.filter(i=>i.type==="expense"),rev=invoices.filter(i=>i.type==="revenue");
+  const totalExp=exp.reduce((a,i)=>a+(parseFloat(i.total_amount)||0),0);
+  const totalRev=rev.reduce((a,i)=>a+(parseFloat(i.total_amount)||0),0);
+  const vatIn=exp.reduce((a,i)=>a+(parseFloat(i.vat_amount)||0),0);
+  const vatOut=rev.reduce((a,i)=>a+(parseFloat(i.vat_amount)||0),0);
+  const taxExp=exp.reduce((a,i)=>a+(parseFloat(i.taxable_amount)||0),0);
+  const taxRev=rev.reduce((a,i)=>a+(parseFloat(i.taxable_amount)||0),0);
+  const projects=[...new Set(invoices.map(i=>i.project).filter(Boolean))];
+  const vendors=[...new Set(exp.map(i=>i.vendor_name).filter(Boolean))];
+  return{exp,rev,totalExp,totalRev,vatIn,vatOut,taxExp,taxRev,projects,vendors};
+}
+
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('active');b.querySelector('.nav-dot')?.remove()});
+  const btn=document.getElementById('nav-'+t);
+  btn.classList.add('active');
+  const dot=document.createElement('div');dot.className='nav-dot';btn.appendChild(dot);
+  render();
+}
+
+function render(){
+  const s=getStats();
+  const c=document.getElementById('content');
+  if(currentTab==='home')renderHome(c,s);
+  else if(currentTab==='invoices')renderInvoices(c,s);
+  else if(currentTab==='vat')renderVat(c,s);
+  else if(currentTab==='projects')renderProjects(c,s);
+  else if(currentTab==='ai')renderAI(c,s);
+}
+
+function renderHome(c,s){
+  c.innerHTML=`
+  <div style="margin-bottom:16px"><h2 style="font-size:18px;font-weight:800">ملخص الأداء</h2><p style="font-size:11px;color:var(--chrome)">${new Date().toLocaleDateString("ar-AE",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</p></div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-icon">📄</div><div class="kpi-val" style="color:var(--purple)">${invoices.length}</div><div class="kpi-label">إجمالي الفواتير</div><div class="kpi-sub">فاتورة مسجلة</div></div>
+    <div class="kpi"><div class="kpi-icon">📤</div><div class="kpi-val" style="color:var(--red)">${fmt(s.totalExp)}</div><div class="kpi-label">المصروفات</div><div class="kpi-sub">${s.exp.length} فاتورة • AED</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-icon">📥</div><div class="kpi-val" style="color:var(--green)">${fmt(s.totalRev)}</div><div class="kpi-label">الإيرادات</div><div class="kpi-sub">${s.rev.length} فاتورة • AED</div></div>
+    <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" style="color:var(--rose)">${fmt(s.vatOut-s.vatIn)}</div><div class="kpi-label">صافي الضريبة</div><div class="kpi-sub">المستحق للهيئة • AED</div></div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-icon">🏗</div><div class="kpi-val" style="color:var(--navyL)">${s.projects.length}</div><div class="kpi-label">المشاريع النشطة</div></div>
+    <div class="kpi"><div class="kpi-icon">🏢</div><div class="kpi-val" style="color:var(--gold)">${s.vendors.length}</div><div class="kpi-label">الموردين</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-weight:700;font-size:14px">آخر الفواتير</span><button onclick="switchTab('invoices')" style="font-size:11px;color:var(--rose);background:none;border:none;cursor:pointer;font-family:inherit">عرض الكل ←</button></div>
+    ${invoices.slice(0,5).map((inv,i)=>`<div class="inv-item"><div><div style="font-size:12px;font-weight:600">${(inv.vendor_name||"-").slice(0,25)}</div><div style="font-size:10px;color:var(--chrome)">${inv.invoice_date||"-"} • ${(inv.project||"-").replace("مشروع ","").slice(0,15)}</div></div><div style="text-align:left"><div style="font-size:12px;font-weight:700;color:${inv.type==="revenue"?"var(--green)":"var(--white)"}">${fmt(inv.total_amount)}</div><span class="badge ${inv.type==="expense"?"badge-exp":"badge-rev"}">${inv.type==="expense"?"مصروف":"إيراد"}</span></div></div>`).join("")}
+  </div>`;
+}
+
+function renderInvoices(c,s){
+  const filters=[{id:"all",label:"الكل"},{id:"expense",label:"مصروفات"},{id:"revenue",label:"إيرادات"},...s.projects.map(p=>({id:p,label:p.replace("مشروع ","")}))];
+  const list=currentFilter==="all"?invoices:currentFilter==="expense"?s.exp:currentFilter==="revenue"?s.rev:invoices.filter(i=>i.project===currentFilter);
+  c.innerHTML=`
+  <h2 style="font-size:18px;font-weight:800;margin-bottom:12px">الفواتير</h2>
+  <div class="filter-bar">${filters.map(f=>`<button class="filter-btn ${currentFilter===f.id?"active":""}" onclick="currentFilter='${f.id}';render()">${f.label}</button>`).join("")}</div>
+  ${list.length===0?'<div style="text-align:center;padding:40px;color:var(--chrome)">📭 لا توجد فواتير</div>':
+  list.map(inv=>`<div class="inv-card"><div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div><div style="font-size:13px;font-weight:700;margin-bottom:2px">${inv.vendor_name||"-"}</div><div style="font-size:11px;color:var(--chrome)">#${inv.invoice_number||"-"} • ${inv.invoice_date||"-"}</div><div style="font-size:11px;color:var(--navyL);margin-top:2px">🏗 ${inv.project||"-"}</div></div>
+    <div style="text-align:left"><div style="font-size:15px;font-weight:800;color:${inv.type==="revenue"?"var(--green)":"var(--white)"}">${fmt(inv.total_amount)}</div><div style="font-size:10px;color:var(--chrome)">VAT: ${fmt(inv.vat_amount)}</div><span class="badge ${inv.type==="expense"?"badge-exp":"badge-rev"}">${inv.type==="expense"?"مصروف":"إيراد"}</span></div>
+  </div></div>`).join("")}`;
+}
+
+function renderVat(c,s){
+  c.innerHTML=`
+  <h2 style="font-size:18px;font-weight:800;margin-bottom:16px">التقرير الضريبي</h2>
+  <div class="card">
+    <div style="text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div class="logo" style="margin:0 auto 8px;width:48px;height:48px;border-radius:13px"><span style="font-size:18px">MH</span></div>
+      <div style="font-size:13px;color:var(--rose);font-weight:800;letter-spacing:2px">MASTER HEAT</div>
+      <div style="font-size:9px;color:var(--chrome);letter-spacing:1.5px">GENERAL MAINTENANCE & CONTRACTING L.L.C.</div>
+      <div style="font-size:11px;color:var(--silver);margin-top:6px;font-weight:600">VAT REPORT — التقرير الضريبي</div>
+    </div>
+    <div class="vat-section" style="background:rgba(74,222,128,.03);border:1px solid rgba(74,222,128,.13)">
+      <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:8px">📥 REVENUES — الإيرادات</div>
+      <div class="vat-row"><span>AMOUNT</span><span>${fmt(s.taxRev)} AED</span></div>
+      <div class="vat-row"><span>VAT 5%</span><span>${fmt(s.vatOut)} AED</span></div>
+      <div class="vat-total" style="color:var(--green)"><span>TOTAL</span><span>${fmt(s.totalRev)} AED</span></div>
+    </div>
+    <div class="vat-section" style="background:rgba(248,113,113,.03);border:1px solid rgba(248,113,113,.13)">
+      <div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:8px">📤 EXPENSES — المصروفات</div>
+      <div class="vat-row"><span>AMOUNT</span><span>${fmt(s.taxExp)} AED</span></div>
+      <div class="vat-row"><span>VAT 5%</span><span>${fmt(s.vatIn)} AED</span></div>
+      <div class="vat-total" style="color:var(--red)"><span>TOTAL</span><span>${fmt(s.totalExp)} AED</span></div>
+    </div>
+    <div class="vat-section" style="background:linear-gradient(135deg,rgba(196,149,106,.09),rgba(160,120,80,.06));border:1px solid rgba(196,149,106,.2)">
+      <div style="font-size:12px;color:var(--rose);font-weight:700;margin-bottom:10px;text-align:center">🏛 ملخص الإقرار الضريبي</div>
+      <div class="vat-row"><span>VAT Output (ضريبة المخرجات)</span><span style="color:var(--green)">${fmt(s.vatOut)}</span></div>
+      <div class="vat-row"><span>VAT Input (ضريبة المدخلات)</span><span style="color:var(--red)">${fmt(s.vatIn)}</span></div>
+      <div style="border-top:2px solid rgba(196,149,106,.27);padding-top:12px;text-align:center;margin-top:8px">
+        <div style="font-size:11px;color:var(--chrome);margin-bottom:4px">💰 Net VAT Payable — صافي الضريبة المستحقة</div>
+        <div style="font-size:26px;color:var(--rose);font-weight:900">${fmt(s.vatOut-s.vatIn)} AED</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:9px;color:var(--navy);margin-top:8px">الهيئة الاتحادية للضرائب — UAE FTA • ${new Date().toLocaleDateString("en-GB")}</div>
+  </div>`;
+}
+
+function renderProjects(c,s){
+  if(s.projects.length===0){c.innerHTML='<h2 style="font-size:18px;font-weight:800;margin-bottom:16px">تقارير المشاريع</h2><div style="text-align:center;padding:40px;color:var(--chrome)">📭 لا توجد مشاريع</div>';return}
+  c.innerHTML=`<h2 style="font-size:18px;font-weight:800;margin-bottom:16px">تقارير المشاريع</h2>`+
+  s.projects.map(proj=>{
+    const pi=s.exp.filter(i=>i.project===proj);
+    const pt=pi.reduce((a,i)=>a+(parseFloat(i.total_amount)||0),0);
+    const pv=pi.reduce((a,i)=>a+(parseFloat(i.vat_amount)||0),0);
+    const pct=s.totalExp>0?Math.round((pt/s.totalExp)*100):0;
+    const vnd={};pi.forEach(i=>{vnd[i.vendor_name||"?"]=((vnd[i.vendor_name||"?"])||0)+(parseFloat(i.total_amount)||0)});
+    const top=Object.entries(vnd).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    return`<div class="proj-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:14px;font-weight:700">🏗 ${proj}</div><div style="font-size:10px;color:var(--chrome);background:rgba(196,149,106,.09);padding:2px 8px;border-radius:6px">${pi.length} فاتورة</div></div>
+      <div class="proj-bar"><div class="proj-bar-fill" style="width:${pct}%"></div></div>
+      <div class="proj-stats"><div class="proj-stat"><div style="font-size:10px;color:var(--chrome)">الإجمالي</div><div style="font-size:14px;font-weight:800;color:var(--rose)">${fmt(pt)} AED</div></div><div class="proj-stat"><div style="font-size:10px;color:var(--chrome)">الضريبة</div><div style="font-size:14px;font-weight:800;color:var(--purple)">${fmt(pv)} AED</div></div></div>
+      ${top.length?`<div style="border-top:1px solid var(--border);padding-top:8px"><div style="font-size:10px;color:var(--chrome);margin-bottom:4px">أكبر الموردين:</div>${top.map(([v,a])=>`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:var(--chrome)"><span>${(v||"").slice(0,28)}</span><span style="color:var(--silver);font-weight:600">${fmt(a)}</span></div>`).join("")}</div>`:""}
+    </div>`;
+  }).join("");
+}
+
+function renderAI(c,s){
+  c.innerHTML=`<h2 style="font-size:18px;font-weight:800;margin-bottom:12px">المساعد الذكي</h2>
+  <div class="chat-container">
+    <div class="chat-messages" id="chatMsgs">${chatHistory.map(m=>`<div class="chat-bubble ${m.role==="user"?"chat-user":"chat-bot"}">${m.text}</div>`).join("")}</div>
+    <div class="chat-input-row"><input class="chat-input" id="chatIn" placeholder="اسألني عن فواتيرك..." onkeydown="if(event.key==='Enter')sendChat()"><button class="chat-send" id="chatBtn" onclick="sendChat()">➤</button></div>
+  </div>`;
+  const msgs=document.getElementById('chatMsgs');
+  if(msgs)msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatIn');
+  const text=input.value.trim();
+  if(!text)return;
+  chatHistory.push({role:"user",text});
+  input.value="";render();
+  const dbSum=JSON.stringify(invoices.slice(0,50).map(i=>({num:i.invoice_number,vendor:i.vendor_name,amount:i.total_amount,vat:i.vat_amount,type:i.type,project:i.project,date:i.invoice_date})));
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+        system:`أنت مساعد مالي لشركة ماسترهيت للصيانة والمقاولات العامة في أبوظبي. البيانات: ${dbSum}. أجب باختصار بالعربية. العملة AED. الضريبة 5%.`,
+        messages:chatHistory.filter(m=>m.role!=="bot"||chatHistory.indexOf(m)>0).map(m=>({role:m.role==="user"?"user":"assistant",content:m.text}))})});
+    const d=await r.json();
+    chatHistory.push({role:"bot",text:d.content?.[0]?.text||"حدث خطأ"});
+  }catch{chatHistory.push({role:"bot",text:"❌ تعذر الاتصال"});}
+  render();
+}
+
+loadData();
+</script>
+</body>
+</html>
