@@ -1,0 +1,9 @@
+streamlit==1.45.1
+pandas
+plotly
+openpyxl
+supabase
+python-dotenv
+openai
+pdfplumber
+python-telegram-bot[job-queue]
