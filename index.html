@@ -205,15 +205,7 @@ select.inp{cursor:pointer}
     <button class="tab-btn" id="t-materials" onclick="switchTab('materials')">📦 المواد</button>
   </div>
   <div id="tc-budget">
-    <div style="margin-top:12px">
-      <select class="inp" id="proj-select" onchange="loadProjReport()">
-        <option value="">اختر المشروع...</option>
-      </select>
-      <div id="budget-row" style="display:none">
-        <label style="color:var(--txt2);font-size:.78rem;display:block;margin-bottom:4px">الميزانية (AED)</label>
-        <input type="number" class="inp" id="budget-input" value="100000" oninput="updateBudget()">
-      </div>
-    </div>
+    <div style="margin-top:12px" id="proj-cards"></div>
     <div id="proj-report"></div>
   </div>
   <div id="tc-materials" style="display:none">
@@ -295,6 +287,19 @@ select.inp{cursor:pointer}
   </div>
 </div>
 
+<!-- Modal ميزانية -->
+<div class="modal-bg" id="budget-modal" style="display:none" onclick="closeBudgetModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="budget-modal-title">تحديد الميزانية</div>
+    <div style="color:var(--txt2);font-size:.82rem;margin-bottom:12px;text-align:center">أدخل الميزانية الإجمالية للمشروع بالدرهم الإماراتي</div>
+    <input type="number" class="inp" id="budget-modal-inp" placeholder="مثال: 2000000" onkeydown="if(event.key==='Enter')saveBudget()">
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--card2);color:var(--txt2);border:1px solid var(--border)" onclick="closeBudgetModal()">إلغاء</button>
+      <button class="btn" style="background:linear-gradient(135deg,var(--pri),#4f46e5)" onclick="saveBudget()">💾 حفظ الميزانية</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal حذف -->
 <div class="modal-bg" id="del-modal" style="display:none" onclick="closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
@@ -353,7 +358,7 @@ async function loadData(){
       db.from('projects').select('*').order('id')
     ]);
     invoices=ir.data||[]; projects=pr.data||[]; filteredInv=[...invoices];
-    renderHome(); populateFilters();
+    renderHome(); populateFilters(); renderProjCards();
   }catch(e){console.error(e);}
 }
 function refreshData(){ loadData(); const r=document.querySelector('.page.active')?.id?.replace('page-',''); if(r==='invoices')filterInv(); }
@@ -370,7 +375,7 @@ function goTo(p){
   document.getElementById('tb-sub').textContent=s;
   window.scrollTo(0,0);
   if(p==='invoices')filterInv();
-  if(p==='projects')populateProjSelect();
+  if(p==='projects')renderProjCards();
   if(p==='vat'){initVatDates();renderVatDeadline();}
   if(p==='ai')document.getElementById('chat-inp').focus();
 }
@@ -497,38 +502,97 @@ function exportInv(){
 }
 
 // ── المشاريع ──
-function populateProjSelect(){
-  document.getElementById('proj-select').innerHTML='<option value="">اختر المشروع...</option>'+projects.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+let activeProjName = null;
+
+function populateProjSelect(){ /* kept for compat */ }
+
+function renderProjCards(){
+  const el = document.getElementById('proj-cards');
+  if(!projects.length){ el.innerHTML='<div class="empty"><div class="empty-ico">🏗️</div><div>لا توجد مشاريع</div></div>'; return; }
+  el.innerHTML = projects.map(p => {
+    const exp = invoices.filter(i=>i.type==='expense'&&i.project===p.name);
+    const actual = exp.reduce((s,i)=>s+(+i.total_amount||0),0);
+    const budget = +p.budget||0;
+    const pct = budget>0 ? Math.min(actual/budget*100,100) : 0;
+    const barCls = pct>=90?'danger':pct>=70?'warn':'';
+    const active = activeProjName===p.name;
+    return `
+    <div style="background:var(--card);border:1px solid ${active?'var(--pri)':'var(--border)'};border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;transition:.2s" onclick="selectProj('${esc(p.name)}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-weight:900;color:#fff;font-size:.95rem">🏗️ ${esc(p.name)}</div>
+        <button onclick="event.stopPropagation();openBudgetModal('${esc(p.name)}',${budget})" style="background:var(--pri-glow);border:1px solid var(--pri);color:var(--pri2);border-radius:8px;padding:4px 10px;font-size:.72rem;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer">✏️ تعديل الميزانية</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--txt2);margin-bottom:5px">
+        <span>المصروف: <strong style="color:var(--teal2)">${fmt(actual)} AED</strong></span>
+        <span>الميزانية: <strong style="color:var(--gold2)">${budget>0?fmt(budget)+' AED':'غير محددة'}</strong></span>
+      </div>
+      ${budget>0?`
+      <div class="progress-wrap"><div class="progress-bar ${barCls}" style="width:${pct}%"></div></div>
+      <div style="text-align:left;font-size:.72rem;color:${pct>=90?'var(--red)':pct>=70?'var(--orange)':'var(--green)'};font-weight:700;margin-top:3px">${pct.toFixed(1)}%</div>`:''}
+    </div>`;
+  }).join('');
 }
-function loadProjReport(){
-  const n=document.getElementById('proj-select').value;
-  document.getElementById('budget-row').style.display=n?'block':'none';
-  if(n)updateBudget(); else document.getElementById('proj-report').innerHTML='';
+
+function selectProj(name){
+  activeProjName = name;
+  renderProjCards();
+  showProjDetail(name);
+  document.getElementById('proj-report').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function updateBudget(){
-  const name=document.getElementById('proj-select').value;
-  const budget=+(document.getElementById('budget-input').value)||0;
-  if(!name)return;
-  const exp=invoices.filter(i=>i.type==='expense'&&i.project===name);
-  const actual=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
-  const remain=budget-actual, pct=budget>0?actual/budget*100:0;
-  const vc=pct>=90?'r':pct>=70?'o':'g';
-  const barCls=pct>=90?'danger':pct>=70?'warn':'';
+
+function showProjDetail(name){
+  const p = projects.find(x=>x.name===name);
+  const budget = p ? (+p.budget||0) : 0;
+  const exp = invoices.filter(i=>i.type==='expense'&&i.project===name);
+  const actual = exp.reduce((s,i)=>s+(+i.total_amount||0),0);
+  const remain = budget-actual;
+  const pct = budget>0 ? actual/budget*100 : 0;
+  const vc = pct>=90?'r':pct>=70?'o':'g';
+  const barCls = pct>=90?'danger':pct>=70?'warn':'';
   const vendors={};
   exp.forEach(i=>{const v=i.vendor_name||'غير معروف';vendors[v]=(vendors[v]||0)+(+i.total_amount||0);});
   const topV=Object.entries(vendors).sort((a,b)=>b[1]-a[1]).slice(0,5);
   document.getElementById('proj-report').innerHTML=`
-    <div class="stat-grid" style="margin-top:12px">
-      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val t">${fmt(actual)}</div><div class="stat-lbl">المصروف الفعلي AED</div></div>
-      <div class="stat-card"><div class="stat-icon">📉</div><div class="stat-val ${vc}">${fmt(Math.abs(remain))}</div><div class="stat-lbl">${remain>=0?'المتبقي':'التجاوز'} AED</div></div>
+    <div class="sec-hdr" style="margin-top:4px">📊 تفاصيل: ${esc(name)}</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-val t">${fmt(actual)}</div><div class="stat-lbl">المصروف الفعلي AED</div></div>
+      <div class="stat-card"><div class="stat-icon">${remain>=0?'💰':'⚠️'}</div><div class="stat-val ${budget>0?vc:'t'}">${budget>0?fmt(Math.abs(remain)):'-'}</div><div class="stat-lbl">${budget>0?(remain>=0?'المتبقي':'التجاوز')+' AED':'حدد الميزانية'}</div></div>
     </div>
-    <div style="margin:8px 0">
-      <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--txt2);margin-bottom:5px"><span>نسبة الصرف</span><span style="font-weight:700;color:${pct>=90?'var(--red)':pct>=70?'var(--orange)':'var(--green)'}">${pct.toFixed(1)}%</span></div>
+    ${budget>0?`
+    <div style="margin:4px 0 12px">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--txt2);margin-bottom:5px">
+        <span>نسبة الصرف من ${fmt(budget)} AED</span>
+        <span style="font-weight:700;color:${pct>=90?'var(--red)':pct>=70?'var(--orange)':'var(--green)'}">${pct.toFixed(1)}%</span>
+      </div>
       <div class="progress-wrap"><div class="progress-bar ${barCls}" style="width:${Math.min(pct,100)}%"></div></div>
     </div>
-    ${pct>=90?'<div class="alert alert-r">⚠️ تحذير: تجاوز 90% من الميزانية!</div>':pct>=70?'<div class="alert alert-gold">🔶 صُرف أكثر من 70% من الميزانية</div>':'<div class="alert alert-g">✅ الصرف ضمن الحدود الآمنة</div>'}
+    ${pct>=90?'<div class="alert alert-r">⚠️ تحذير: تجاوز 90% من الميزانية!</div>':pct>=70?'<div class="alert alert-gold">🔶 صُرف أكثر من 70% من الميزانية</div>':'<div class="alert alert-g">✅ الصرف ضمن الحدود الآمنة</div>'}`:
+    '<div class="alert alert-b">💡 اضغط "تعديل الميزانية" لتحديد ميزانية المشروع</div>'}
     ${topV.length?`<div class="sec-hdr">🏢 أكبر الموردين</div><div class="tbl-wrap"><table><thead><tr><th>المورد</th><th>الإجمالي AED</th></tr></thead><tbody>${topV.map(([v,a])=>`<tr><td style="color:var(--txt)">${trunc(v,20)}</td><td style="color:var(--teal2);font-weight:700">${fmt(a)}</td></tr>`).join('')}</tbody></table></div>`:''}
     ${exp.length?`<div class="sec-hdr">📋 الفواتير (${exp.length})</div><div class="tbl-wrap"><table><thead><tr><th>رقم الفاتورة</th><th>المورد</th><th>الإجمالي</th><th>التاريخ</th></tr></thead><tbody>${exp.map(i=>`<tr><td style="color:var(--txt3)">${trunc(i.invoice_number,12)}</td><td style="color:var(--txt)">${trunc(i.vendor_name,13)}</td><td style="color:var(--teal2);font-weight:700">${fmt(i.total_amount)}</td><td style="color:var(--txt3)">${fmtDt(i.invoice_date)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-ico">📭</div><div>لا توجد فواتير</div></div>'}`;
+}
+
+// ── Modal الميزانية ──
+let budgetModalProj=null;
+function openBudgetModal(name, current){
+  budgetModalProj=name;
+  document.getElementById('budget-modal-title').textContent=`ميزانية: ${name}`;
+  document.getElementById('budget-modal-inp').value=current||'';
+  document.getElementById('budget-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('budget-modal-inp').focus(),100);
+}
+function closeBudgetModal(){ document.getElementById('budget-modal').style.display='none'; budgetModalProj=null; }
+async function saveBudget(){
+  const val=+(document.getElementById('budget-modal-inp').value)||0;
+  if(!budgetModalProj)return;
+  try{
+    await db.from('projects').update({budget:val}).eq('name',budgetModalProj);
+    const p=projects.find(x=>x.name===budgetModalProj);
+    if(p) p.budget=val;
+    closeBudgetModal();
+    renderProjCards();
+    if(activeProjName===budgetModalProj) showProjDetail(budgetModalProj);
+  }catch(e){ alert('خطأ: '+e.message); }
 }
 function switchTab(t){
   document.getElementById('tc-budget').style.display=t==='budget'?'block':'none';
