@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0ea5e9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ماستر هيت">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>ماستر هيت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{font-family:'Tajawal',sans-serif;background:#0a0f1e;color:#e2e8f0;direction:rtl;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.page{display:none;padding:0 12px 90px;max-width:500px;margin:0 auto}
+.page.active{display:block}
+.topbar{background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(56,189,248,.2);position:sticky;top:0;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:10px}
+.topbar-title{font-size:1.1rem;font-weight:900;color:#fff}
+.topbar-sub{font-size:.66rem;color:#64748b;margin-top:1px}
+.topbar-time{color:#38bdf8;font-size:.72rem;font-weight:700}
+.topbar-refresh{background:none;border:none;color:#64748b;font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:8px}
+.topbar-refresh:active{color:#38bdf8}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.stat-card{background:#1e293b;border:1px solid #1e3a5f;border-radius:14px;padding:14px 10px;text-align:center}
+.stat-card.full{grid-column:1/-1}
+.stat-icon{font-size:1.3rem;margin-bottom:4px}
+.stat-val{font-size:1.2rem;font-weight:900;color:#38bdf8;margin:3px 0}
+.stat-val.g{color:#22c55e}.stat-val.r{color:#ef4444}.stat-val.o{color:#f97316}
+.stat-lbl{color:#64748b;font-size:.68rem}
+.alert{border-radius:12px;padding:11px 14px;font-size:.83rem;font-weight:700;margin:10px 0;display:flex;align-items:center;gap:8px}
+.alert-r{background:#7f1d1d;color:#fca5a5}
+.alert-b{background:#1e3a5f;color:#93c5fd}
+.alert-g{background:#064e3b;color:#6ee7b7}
+.sec-hdr{color:#e2e8f0;font-size:.9rem;font-weight:900;padding:12px 0 8px;border-bottom:2px solid #1e3a5f;margin-bottom:10px}
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid #1e3a5f;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead tr{background:#1e3a5f}
+th{padding:9px 8px;text-align:right;color:#93c5fd;font-weight:700;white-space:nowrap}
+td{padding:8px 8px;border-bottom:1px solid #1e293b;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+tr:last-child td{border:none}
+tr:nth-child(even) td{background:rgba(30,41,59,.4)}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.7rem;font-weight:700}
+.badge-out{background:rgba(239,68,68,.15);color:#ef4444}
+.badge-in{background:rgba(34,197,94,.15);color:#22c55e}
+.chart-wrap{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #1e3a5f}
+.chart-wrap canvas{max-height:220px}
+.inp{background:#1e293b;border:1px solid #334155;border-radius:10px;color:#e2e8f0;padding:9px 12px;font-family:'Tajawal',sans-serif;font-size:.85rem;direction:rtl;width:100%;outline:none;display:block;margin-bottom:8px}
+.inp:focus{border-color:#38bdf8}
+select.inp{cursor:pointer}
+.btn{display:block;width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;text-align:center;margin:8px 0}
+.btn:active{opacity:.8}
+.btn.g{background:linear-gradient(135deg,#22c55e,#16a34a)}
+.progress-wrap{background:#1e293b;border-radius:8px;height:10px;overflow:hidden;margin:8px 0}
+.progress-bar{height:100%;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+.progress-bar.warn{background:linear-gradient(135deg,#f97316,#ea580c)}
+.progress-bar.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0f172a;border-top:1px solid #1e3a5f;display:flex;z-index:200;padding:6px 0 max(8px,env(safe-area-inset-bottom))}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border-radius:10px;margin:0 2px;border:none;background:none}
+.nav-item.active{background:rgba(56,189,248,.12)}
+.nav-ico{font-size:1.25rem;line-height:1}
+.nav-lbl{font-size:.59rem;color:#64748b;font-family:'Tajawal',sans-serif}
+.nav-item.active .nav-lbl{color:#38bdf8}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 190px);min-height:350px}
+.chat-msgs{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 14px;border-radius:14px;font-size:.83rem;line-height:1.6;word-break:break-word}
+.msg.user{background:#1e3a5f;color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:4px}
+.msg.bot{background:#1e293b;border:1px solid #334155;color:#cbd5e1;align-self:flex-end;border-bottom-right-radius:4px}
+.msg.bot strong{color:#38bdf8}.msg.bot em{color:#a78bfa}
+.msg.bot code{background:#0f172a;padding:1px 5px;border-radius:4px;font-size:.76rem;color:#22c55e}
+.msg.bot ul{padding-right:16px;margin-top:4px}.msg.bot li{margin:2px 0}
+.typing-dots{display:flex;align-items:center;gap:5px;padding:10px 14px;background:#1e293b;border-radius:14px;align-self:flex-end;border:1px solid #334155}
+.dot{width:6px;height:6px;border-radius:50%;background:#38bdf8;animation:bounce .8s infinite}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+.chat-row{display:flex;gap:8px;padding:10px 0 0}
+.chat-row .inp{flex:1;margin:0}
+.send-btn{background:linear-gradient(135deg,#0ea5e9,#0284c7);border:none;border-radius:10px;color:#fff;padding:0 16px;font-size:1.2rem;cursor:pointer}
+.loader{position:fixed;inset:0;background:#0a0f1e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;transition:opacity .4s}
+.loader-ico{font-size:3.5rem;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
+.loader-txt{color:#38bdf8;font-size:1.1rem;font-weight:900}
+.loader-sub{color:#475569;font-size:.8rem}
+.empty{text-align:center;padding:40px 20px;color:#475569}
+.empty-ico{font-size:3rem;margin-bottom:12px}
+.skeleton{background:linear-gradient(90deg,#1e293b 25%,#273548 50%,#1e293b 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:20px;margin:4px 0}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.tab-row{display:flex;border-bottom:2px solid #1e3a5f;margin:12px 0 0}
+.tab-btn{flex:1;background:none;border:none;color:#64748b;font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:700;padding:10px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab-btn.active{color:#38bdf8;border-bottom-color:#38bdf8}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="loader-ico">🏗️</div>
+  <div class="loader-txt">ماستر هيت</div>
+  <div class="loader-sub">للصيانة والمقاولات العامة</div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+      <rect width="34" height="34" rx="9" fill="#0ea5e9" fill-opacity=".15"/>
+      <rect x="7" y="16" width="20" height="13" rx="2" fill="#0ea5e9"/>
+      <rect x="11" y="9" width="12" height="9" rx="2" fill="#38bdf8"/>
+      <rect x="10" y="19" width="5" height="5" rx="1" fill="white" fill-opacity=".7"/>
+      <rect x="19" y="19" width="5" height="5" rx="1" fill="white" fill-opacity=".7"/>
+    </svg>
+    <div>
+      <div class="topbar-title" id="tb-title">ماستر هيت</div>
+      <div class="topbar-sub" id="tb-sub">للمقاولات العامة</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="topbar-time" id="tb-time"></span>
+    <button class="topbar-refresh" onclick="refreshData()">↻</button>
+  </div>
+</div>
+
+<!-- ════ الرئيسية ════ -->
+<div class="page active" id="page-home">
+  <div id="home-alert"></div>
+  <div class="stat-grid" id="home-stats">
+    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
+    <div class="stat-card full"><div class="skeleton" style="height:24px"></div></div>
+  </div>
+  <div class="chart-wrap" id="home-chart" style="display:none">
+    <div class="sec-hdr">📊 المصروفات حسب المشروع</div>
+    <canvas id="proj-chart"></canvas>
+  </div>
+  <div id="home-recent"></div>
+</div>
+
+<!-- ════ المشاريع ════ -->
+<div class="page" id="page-projects">
+  <div class="tab-row">
+    <button class="tab-btn active" id="t-budget" onclick="switchTab('budget')">📈 مقارنة الميزانية</button>
+    <button class="tab-btn" id="t-materials" onclick="switchTab('materials')">📦 جدول المواد</button>
+  </div>
+  <div id="tc-budget">
+    <div style="margin-top:12px">
+      <select class="inp" id="proj-select" onchange="loadProjReport()">
+        <option value="">اختر المشروع...</option>
+      </select>
+      <div id="budget-row" style="display:none">
+        <label style="color:#94a3b8;font-size:.78rem;display:block;margin-bottom:3px">الميزانية (AED)</label>
+        <input type="number" class="inp" id="budget-input" value="100000" oninput="updateBudget()">
+      </div>
+    </div>
+    <div id="proj-report"></div>
+  </div>
+  <div id="tc-materials" style="display:none">
+    <div class="alert alert-b" style="margin-top:12px">📦 ارفع جدول المواد لتقدير التكلفة بالذكاء الاصطناعي</div>
+    <input type="text" class="inp" id="mat-proj" placeholder="اسم المشروع (اختياري)">
+    <label style="display:block;background:#1e293b;border:2px dashed #334155;border-radius:12px;padding:28px;text-align:center;cursor:pointer;color:#64748b;font-size:.85rem;margin-bottom:10px">
+      <div style="font-size:2.2rem;margin-bottom:8px">📁</div>
+      اضغط لرفع Excel أو CSV
+      <input type="file" accept=".xlsx,.xls,.csv" id="mat-file" style="display:none" onchange="handleMat()">
+    </label>
+    <div id="mat-preview"></div>
+    <button class="btn" id="mat-btn" onclick="estimateCost()" style="display:none">🤖 تقدير التكلفة</button>
+    <div id="mat-result"></div>
+    <button class="btn g" id="mat-dl" onclick="exportMat()" style="display:none">⬇️ تحميل Excel</button>
+  </div>
+</div>
+
+<!-- ════ الضريبة ════ -->
+<div class="page" id="page-vat">
+  <div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">
+    <div style="flex:1;min-width:130px">
+      <label style="color:#94a3b8;font-size:.75rem;display:block;margin-bottom:3px">من</label>
+      <input type="date" class="inp" id="vat-from" style="margin:0">
+    </div>
+    <div style="flex:1;min-width:130px">
+      <label style="color:#94a3b8;font-size:.75rem;display:block;margin-bottom:3px">إلى</label>
+      <input type="date" class="inp" id="vat-to" style="margin:0">
+    </div>
+  </div>
+  <button class="btn" onclick="loadVat()">🔍 عرض التقرير</button>
+  <div id="vat-stats"></div>
+  <div class="chart-wrap" id="vat-chart-box" style="display:none"><canvas id="vat-chart"></canvas></div>
+  <div id="vat-table"></div>
+  <button class="btn g" id="vat-dl" onclick="exportVat()" style="display:none">⬇️ تصدير Excel</button>
+</div>
+
+<!-- ════ الفواتير ════ -->
+<div class="page" id="page-invoices">
+  <div style="margin-top:12px">
+    <input type="text" class="inp" id="inv-search" placeholder="🔍 بحث — مورد أو رقم فاتورة" oninput="filterInv()">
+    <div style="display:flex;gap:8px">
+      <select class="inp" id="inv-type" onchange="filterInv()" style="flex:1;margin:0">
+        <option value="">الكل</option>
+        <option value="expense">📤 مصروف</option>
+        <option value="revenue">📥 إيراد</option>
+      </select>
+      <select class="inp" id="inv-proj" onchange="filterInv()" style="flex:1;margin:0">
+        <option value="">كل المشاريع</option>
+      </select>
+    </div>
+  </div>
+  <div id="inv-summary"></div>
+  <div id="inv-table"></div>
+  <button class="btn g" onclick="exportInv()" style="margin-top:4px">⬇️ تصدير Excel</button>
+</div>
+
+<!-- ════ المساعد ════ -->
+<div class="page" id="page-ai">
+  <div class="chat-wrap" style="margin-top:12px">
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="msg bot">👋 مرحباً! أنا مساعدك الذكي لشركة <strong>ماستر هيت</strong>.<br><br>يمكنني مساعدتك في تحليل الفواتير، حساب المصروفات، وتقرير ضريبة القيمة المضافة.<br><br>اسألني أي شيء! 💬</div>
+    </div>
+    <div class="chat-row">
+      <input class="inp" id="chat-inp" type="text" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="goTo('home')" id="nav-home"><span class="nav-ico">🏠</span><span class="nav-lbl">الرئيسية</span></button>
+  <button class="nav-item" onclick="goTo('projects')" id="nav-projects"><span class="nav-ico">📊</span><span class="nav-lbl">المشاريع</span></button>
+  <button class="nav-item" onclick="goTo('vat')" id="nav-vat"><span class="nav-ico">🧾</span><span class="nav-lbl">الضريبة</span></button>
+  <button class="nav-item" onclick="goTo('invoices')" id="nav-invoices"><span class="nav-ico">📋</span><span class="nav-lbl">الفواتير</span></button>
+  <button class="nav-item" onclick="goTo('ai')" id="nav-ai"><span class="nav-ico">🤖</span><span class="nav-lbl">المساعد</span></button>
+</nav>
+
+<script>
+const SUPA_URL = 'https://mxxwdjycqfrzzvgczsng.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eHdkanljcWZyenp2Z2N6c25nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NzgwMTksImV4cCI6MjA5NjI1NDAxOX0.89k5-HYdwjTTtpXovqrE0uRRurXYOMV-PoK4DQLjPP8';
+const AI_URL   = `${SUPA_URL}/functions/v1/ai-chat`;
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let invoices=[], projects=[], filteredInv=[], projChrt=null, vatChrt=null, matRows=null, vatData=null;
+
+// ── ساعة ──
+function tick(){ const n=new Date(); document.getElementById('tb-time').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
+tick(); setInterval(tick,15000);
+
+// ── أدوات ──
+const fmt  = n => (+n||0).toLocaleString('ar-AE',{maximumFractionDigits:0});
+const fmtD = n => (+n||0).toLocaleString('ar-AE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const trunc= (s,n)=>{ s=String(s||'-'); return s.length>n?s.slice(0,n)+'…':s; };
+const esc  = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtDt= d=>{ if(!d)return'-'; const x=new Date(d); return isNaN(x)?'-':`${x.getDate()}/${x.getMonth()+1}/${x.getFullYear().toString().slice(2)}`; };
+function renderMd(t){
+  if(!t)return'';
+  return esc(t)
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`([^`\n]+)`/g,'<code>$1</code>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[^]*?<\/li>\n?)+/g,s=>`<ul>${s}</ul>`)
+    .replace(/\n/g,'<br>');
+}
+
+// ── تحميل البيانات ──
+async function loadData(){
+  try{
+    const[ir,pr]=await Promise.all([
+      db.from('invoices').select('*').order('created_at',{ascending:false}),
+      db.from('projects').select('*').order('id')
+    ]);
+    invoices=ir.data||[]; projects=pr.data||[]; filteredInv=[...invoices];
+    renderHome(); populateFilters();
+  }catch(e){console.error(e);}
+}
+function refreshData(){ loadData(); const r=document.querySelector('.page.active')?.id?.replace('page-',''); if(r==='invoices')filterInv(); }
+
+// ── التنقل ──
+const META={home:['ماستر هيت','للمقاولات العامة'],projects:['المشاريع','التحليل'],vat:['الضريبة','VAT Report'],invoices:['الفواتير','السجلات'],ai:['المساعد الذكي','GPT-4o']};
+function goTo(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('nav-'+p).classList.add('active');
+  const[t,s]=META[p]||['ماستر هيت',''];
+  document.getElementById('tb-title').textContent=t;
+  document.getElementById('tb-sub').textContent=s;
+  window.scrollTo(0,0);
+  if(p==='invoices')filterInv();
+  if(p==='projects')populateProjSelect();
+  if(p==='vat')initVatDates();
+  if(p==='ai')document.getElementById('chat-inp').focus();
+}
+
+// ── الرئيسية ──
+function renderHome(){
+  const exp=invoices.filter(i=>i.type==='expense');
+  const rev=invoices.filter(i=>i.type==='revenue');
+  const tE=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
+  const tR=rev.reduce((s,i)=>s+(+i.total_amount||0),0);
+  const vO=rev.reduce((s,i)=>s+(+i.vat_amount||0),0);
+  const vI=exp.reduce((s,i)=>s+(+i.vat_amount||0),0);
+  const nV=vO-vI, pf=tR-tE;
+  const aP=projects.filter(p=>p.status==='نشط').length||projects.length;
+  const today=new Date(), dl=new Date(today.getFullYear(),6,28), dL=Math.ceil((dl-today)/86400000);
+  const el=document.getElementById('home-alert');
+  if(today.getMonth()>=4&&today.getMonth()<=6&&dL<=30)
+    el.innerHTML=`<div class="alert alert-r">⚠️ موعد الإقرار الضريبي بعد <strong>${dL} يوم</strong></div>`;
+  else if(today.getMonth()>=4&&today.getMonth()<=6)
+    el.innerHTML=`<div class="alert alert-b">🏛️ الفترة الضريبية نشطة — صافي VAT: <strong>${fmtD(nV)} AED</strong></div>`;
+
+  document.getElementById('home-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val">${fmt(tE)}</div><div class="stat-lbl">المصروفات AED</div></div>
+    <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g">${fmt(tR)}</div><div class="stat-lbl">الإيرادات AED</div></div>
+    <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-val ${pf>=0?'g':'r'}">${fmt(pf)}</div><div class="stat-lbl">صافي الربح AED</div></div>
+    <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'r':'g'}">${fmt(nV)}</div><div class="stat-lbl">صافي VAT AED</div></div>
+    <div class="stat-card full" onclick="goTo('projects')" style="cursor:pointer">
+      <div class="stat-icon">🏗️</div><div class="stat-val">${aP} مشروع &nbsp;|&nbsp; ${invoices.length} فاتورة</div>
+      <div class="stat-lbl">اضغط لتفاصيل المشاريع ←</div>
+    </div>`;
+
+  const pe={};
+  exp.forEach(i=>{const p=i.project||'غير محدد';pe[p]=(pe[p]||0)+(+i.total_amount||0);});
+  const labs=Object.keys(pe),vals=Object.values(pe);
+  if(labs.length){
+    document.getElementById('home-chart').style.display='block';
+    if(projChrt)projChrt.destroy();
+    projChrt=new Chart(document.getElementById('proj-chart'),{
+      type:'bar',data:{labels:labs,datasets:[{data:vals,backgroundColor:'rgba(14,165,233,.7)',borderRadius:8,borderSkipped:false}]},
+      options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} AED`}}},
+        scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{color:'rgba(255,255,255,.04)'}},
+                y:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}
+    });
+  }
+  const rc=invoices.slice(0,10);
+  document.getElementById('home-recent').innerHTML=rc.length?`
+    <div class="sec-hdr">📋 آخر الفواتير</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>النوع</th><th>المورد</th><th>الإجمالي</th><th>المشروع</th></tr></thead>
+      <tbody>${rc.map(i=>`<tr>
+        <td><span class="badge ${i.type==='expense'?'badge-out':'badge-in'}">${i.type==='expense'?'📤 مصروف':'📥 إيراد'}</span></td>
+        <td>${trunc(i.vendor_name,14)}</td>
+        <td style="color:#38bdf8;font-weight:700">${fmt(i.total_amount)}</td>
+        <td>${trunc(i.project,12)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`:'';
+}
+
+// ── الفواتير ──
+function populateFilters(){
+  const ps=[...new Set(invoices.map(i=>i.project).filter(Boolean))].sort();
+  document.getElementById('inv-proj').innerHTML='<option value="">كل المشاريع</option>'+ps.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  populateProjSelect();
+}
+function filterInv(){
+  const q=document.getElementById('inv-search').value.toLowerCase();
+  const t=document.getElementById('inv-type').value;
+  const p=document.getElementById('inv-proj').value;
+  filteredInv=invoices.filter(i=>{
+    if(t&&i.type!==t)return false;
+    if(p&&i.project!==p)return false;
+    if(q&&!String(i.vendor_name||'').toLowerCase().includes(q)&&!String(i.invoice_number||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  const tot=filteredInv.reduce((s,i)=>s+(+i.total_amount||0),0);
+  document.getElementById('inv-summary').innerHTML=`<div class="alert alert-b" style="margin:8px 0">📊 ${filteredInv.length} فاتورة — إجمالي: <strong>${fmtD(tot)} AED</strong></div>`;
+  document.getElementById('inv-table').innerHTML=filteredInv.length?`
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>ن</th><th>رقم الفاتورة</th><th>المورد</th><th>المشروع</th><th>الإجمالي</th><th>التاريخ</th></tr></thead>
+      <tbody>${filteredInv.map(i=>`<tr>
+        <td><span class="badge ${i.type==='expense'?'badge-out':'badge-in'}">${i.type==='expense'?'📤':'📥'}</span></td>
+        <td>${trunc(i.invoice_number,11)}</td>
+        <td>${trunc(i.vendor_name,13)}</td>
+        <td>${trunc(i.project,11)}</td>
+        <td style="color:#38bdf8;font-weight:700">${fmt(i.total_amount)}</td>
+        <td>${fmtDt(i.invoice_date)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`:`<div class="empty"><div class="empty-ico">📭</div><div>لا توجد نتائج</div></div>`;
+}
+function exportInv(){
+  const rows=filteredInv.map(i=>({'رقم الفاتورة':i.invoice_number||'','المورد':i.vendor_name||'','المشروع':i.project||'','النوع':i.type==='expense'?'مصروف':'إيراد','المبلغ الخاضع':i.taxable_amount||0,'الضريبة':i.vat_amount||0,'الإجمالي':i.total_amount||0,'التاريخ':i.invoice_date||''}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'الفواتير');
+  XLSX.writeFile(wb,'invoices.xlsx');
+}
+
+// ── المشاريع ──
+function populateProjSelect(){
+  document.getElementById('proj-select').innerHTML='<option value="">اختر المشروع...</option>'+projects.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+}
+function loadProjReport(){
+  const n=document.getElementById('proj-select').value;
+  document.getElementById('budget-row').style.display=n?'block':'none';
+  if(n)updateBudget(); else document.getElementById('proj-report').innerHTML='';
+}
+function updateBudget(){
+  const name=document.getElementById('proj-select').value;
+  const budget=+(document.getElementById('budget-input').value)||0;
+  if(!name)return;
+  const exp=invoices.filter(i=>i.type==='expense'&&i.project===name);
+  const actual=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
+  const remain=budget-actual, pct=budget>0?actual/budget*100:0;
+  const vc=pct>=90?'r':pct>=70?'o':'g';
+  const barCls=pct>=90?'danger':pct>=70?'warn':'';
+  const vendors={};
+  exp.forEach(i=>{const v=i.vendor_name||'غير معروف';vendors[v]=(vendors[v]||0)+(+i.total_amount||0);});
+  const topV=Object.entries(vendors).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('proj-report').innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val">${fmt(actual)}</div><div class="stat-lbl">المصروف الفعلي AED</div></div>
+      <div class="stat-card"><div class="stat-icon">📉</div><div class="stat-val ${vc}">${fmt(Math.abs(remain))}</div><div class="stat-lbl">${remain>=0?'المتبقي':'التجاوز'} AED</div></div>
+    </div>
+    <div><div style="display:flex;justify-content:space-between;font-size:.78rem;color:#94a3b8;margin-bottom:4px"><span>التقدم</span><span>${pct.toFixed(1)}%</span></div>
+    <div class="progress-wrap"><div class="progress-bar ${barCls}" style="width:${Math.min(pct,100)}%"></div></div></div>
+    ${pct>=90?'<div class="alert alert-r">⚠️ تحذير: تجاوز 90% من الميزانية!</div>':pct>=70?'<div class="alert alert-b">🔶 صُرف أكثر من 70%</div>':''}
+    ${topV.length?`<div class="sec-hdr">🏢 أكبر الموردين</div><div class="tbl-wrap"><table><thead><tr><th>المورد</th><th>الإجمالي AED</th></tr></thead><tbody>${topV.map(([v,a])=>`<tr><td>${trunc(v,18)}</td><td style="color:#38bdf8;font-weight:700">${fmt(a)}</td></tr>`).join('')}</tbody></table></div>`:''}
+    ${exp.length?`<div class="sec-hdr">📋 الفواتير (${exp.length})</div><div class="tbl-wrap"><table><thead><tr><th>رقم الفاتورة</th><th>المورد</th><th>الإجمالي</th><th>التاريخ</th></tr></thead><tbody>${exp.map(i=>`<tr><td>${trunc(i.invoice_number,12)}</td><td>${trunc(i.vendor_name,13)}</td><td style="color:#38bdf8;font-weight:700">${fmt(i.total_amount)}</td><td>${fmtDt(i.invoice_date)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-ico">📭</div><div>لا توجد فواتير</div></div>'}`;
+}
+function switchTab(t){
+  document.getElementById('tc-budget').style.display=t==='budget'?'block':'none';
+  document.getElementById('tc-materials').style.display=t==='materials'?'block':'none';
+  document.getElementById('t-budget').className='tab-btn'+(t==='budget'?' active':'');
+  document.getElementById('t-materials').className='tab-btn'+(t==='materials'?' active':'');
+}
+function handleMat(){
+  const f=document.getElementById('mat-file').files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    matRows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const cols=Object.keys(matRows[0]||{});
+    document.getElementById('mat-preview').innerHTML=`<div class="alert alert-g">✅ ${matRows.length} صف</div><div class="tbl-wrap"><table><thead><tr>${cols.map(c=>`<th>${trunc(c,12)}</th>`).join('')}</tr></thead><tbody>${matRows.slice(0,6).map(r=>`<tr>${cols.map(c=>`<td>${trunc(r[c],12)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    document.getElementById('mat-btn').style.display='block';
+  };
+  r.readAsArrayBuffer(f);
+}
+async function estimateCost(){
+  if(!matRows)return;
+  const pn=document.getElementById('mat-proj').value||'غير محدد';
+  document.getElementById('mat-result').innerHTML='<div class="alert alert-b">⏳ جارٍ التحليل...</div>';
+  try{
+    const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+      body:JSON.stringify({system:'أنت مهندس تكاليف إماراتي. أجب بالعربية.',messages:[{role:'user',content:`قدّر تكلفة جدول المواد (${pn}) بالدرهم مع إجمالي الكميات وضريبة 5% وهامش 10%:\n${matRows.slice(0,50).map(r=>JSON.stringify(r)).join('\n')}`}]})});
+    const d=await res.json();
+    const txt=d?.content?.[0]?.text||d?.choices?.[0]?.message?.content||'لم أتمكن من التحليل';
+    document.getElementById('mat-result').innerHTML=`<div class="sec-hdr">📊 التقدير</div><div style="background:#1e293b;border-radius:12px;padding:14px;font-size:.82rem;line-height:1.7;border:1px solid #1e3a5f">${renderMd(txt)}</div>`;
+    document.getElementById('mat-dl').style.display='block';
+  }catch(e){document.getElementById('mat-result').innerHTML=`<div class="alert alert-r">❌ ${esc(e.message)}</div>`;}
+}
+function exportMat(){
+  if(!matRows)return;
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(matRows),'المواد');
+  XLSX.writeFile(wb,`تقدير_${document.getElementById('mat-proj').value||'مشروع'}.xlsx`);
+}
+
+// ── VAT ──
+function initVatDates(){
+  if(!document.getElementById('vat-from').value){
+    const y=new Date().getFullYear();
+    document.getElementById('vat-from').value=`${y}-05-01`;
+    document.getElementById('vat-to').value=`${y}-07-31`;
+  }
+}
+function loadVat(){
+  const from=new Date(document.getElementById('vat-from').value);
+  const to=new Date(document.getElementById('vat-to').value); to.setHours(23,59,59);
+  vatData=invoices.filter(i=>{ if(!i.invoice_date)return false; const d=new Date(i.invoice_date); return d>=from&&d<=to; });
+  const rev=vatData.filter(i=>i.type==='revenue'), exp=vatData.filter(i=>i.type==='expense');
+  const rvV=rev.reduce((s,i)=>s+(+i.vat_amount||0),0), exV=exp.reduce((s,i)=>s+(+i.vat_amount||0),0);
+  const rvT=rev.reduce((s,i)=>s+(+i.taxable_amount||0),0), exT=exp.reduce((s,i)=>s+(+i.taxable_amount||0),0);
+  const rvTot=rev.reduce((s,i)=>s+(+i.total_amount||0),0), exTot=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
+  const nV=rvV-exV, nc=nV>0?'r':'g', nl=nV>0?'واجب السداد':'مستحق الاسترداد';
+  document.getElementById('vat-stats').innerHTML=`
+    <div class="stat-grid" style="margin-top:10px">
+      <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g">${fmtD(rvV)}</div><div class="stat-lbl">ضريبة المخرجات</div></div>
+      <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val o">${fmtD(exV)}</div><div class="stat-lbl">ضريبة المدخلات</div></div>
+      <div class="stat-card full"><div class="stat-icon">🏛️</div><div class="stat-val ${nc}">${fmtD(Math.abs(nV))} AED</div><div class="stat-lbl">صافي VAT — ${nl}</div></div>
+    </div>`;
+  document.getElementById('vat-chart-box').style.display='block';
+  if(vatChrt)vatChrt.destroy();
+  vatChrt=new Chart(document.getElementById('vat-chart'),{type:'bar',data:{labels:['مخرجات','مدخلات','صافي'],datasets:[{data:[rvV,exV,nV],backgroundColor:['rgba(34,197,94,.7)','rgba(249,115,22,.7)','rgba(56,189,248,.7)'],borderRadius:8}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtD(c.raw)} AED`}}},scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+  document.getElementById('vat-table').innerHTML=`
+    <div class="sec-hdr" style="margin-top:14px">📋 ملخص الإقرار</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>البند</th><th>المبلغ AED</th></tr></thead>
+      <tbody>
+        <tr><td>الإيرادات الخاضعة</td><td style="color:#22c55e;font-weight:700">${fmtD(rvT)}</td></tr>
+        <tr><td>ضريبة المخرجات 5%</td><td style="color:#22c55e;font-weight:700">${fmtD(rvV)}</td></tr>
+        <tr><td>إجمالي الإيرادات</td><td style="color:#22c55e">${fmtD(rvTot)}</td></tr>
+        <tr><td>المصروفات الخاضعة</td><td style="color:#f97316;font-weight:700">${fmtD(exT)}</td></tr>
+        <tr><td>ضريبة المدخلات 5%</td><td style="color:#f97316;font-weight:700">${fmtD(exV)}</td></tr>
+        <tr><td>إجمالي المصروفات</td><td style="color:#f97316">${fmtD(exTot)}</td></tr>
+        <tr style="border-top:2px solid #334155"><td><strong>▶ صافي VAT</strong></td><td style="color:${nc==='r'?'#ef4444':'#22c55e'};font-weight:900;font-size:1rem">${fmtD(nV)}</td></tr>
+      </tbody>
+    </table></div>`;
+  document.getElementById('vat-dl').style.display='block';
+}
+function exportVat(){
+  if(!vatData)return;
+  const wb=XLSX.utils.book_new();
+  const toR=arr=>arr.map(i=>({'رقم':i.invoice_number||'','جهة':i.vendor_name||'','مشروع':i.project||'','تاريخ':i.invoice_date||'','خاضع':i.taxable_amount||0,'ضريبة':i.vat_amount||0,'إجمالي':i.total_amount||0}));
+  const rev=vatData.filter(i=>i.type==='revenue'), exp=vatData.filter(i=>i.type==='expense');
+  if(rev.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(toR(rev)),'الإيرادات');
+  if(exp.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(toR(exp)),'المصروفات');
+  XLSX.writeFile(wb,`VAT_${document.getElementById('vat-from').value}_${document.getElementById('vat-to').value}.xlsx`);
+}
+
+// ── المساعد ──
+async function sendMsg(){
+  const inp=document.getElementById('chat-inp'), q=inp.value.trim(); if(!q)return;
+  inp.value='';
+  const box=document.getElementById('chat-msgs');
+  box.innerHTML+=`<div class="msg user">${esc(q)}</div>`;
+  box.innerHTML+=`<div class="typing-dots" id="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  box.scrollTop=box.scrollHeight;
+  try{
+    const ctx=invoices.slice(0,80).map(i=>({رقم:i.invoice_number,مورد:i.vendor_name,مشروع:i.project,نوع:i.type==='expense'?'مصروف':'إيراد',إجمالي:i.total_amount,ضريبة:i.vat_amount,تاريخ:i.invoice_date}));
+    const pList=projects.map(p=>p.name).join('،');
+    const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({system:`أنت مساعد مالي لشركة "ماستر هيت" بالإمارات. المشاريع:${pList}. البيانات:\n${JSON.stringify(ctx)}\nأجب بالعربية باختصار. الضريبة 5%.`,messages:[{role:'user',content:q}]})});
+    const d=await res.json();
+    const txt=d?.content?.[0]?.text||d?.choices?.[0]?.message?.content||'لم أتمكن من الإجابة.';
+    document.getElementById('typing')?.remove();
+    box.innerHTML+=`<div class="msg bot">${renderMd(txt)}</div>`;
+  }catch(e){document.getElementById('typing')?.remove();box.innerHTML+=`<div class="msg bot">❌ خطأ: ${esc(e.message)}</div>`;}
+  box.scrollTop=box.scrollHeight;
+}
+
+// ── بدء ──
+window.addEventListener('DOMContentLoaded',async()=>{
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  await loadData();
+  const l=document.getElementById('loader');
+  l.style.opacity='0'; setTimeout(()=>l.style.display='none',400);
+});
+</script>
+</body>
+</html>
