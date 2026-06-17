@@ -235,8 +235,8 @@ select.inp{cursor:pointer}
 <div class="page" id="page-vat">
   <div class="vat-period-banner" id="vat-banner">
     <div class="period-label">🏛️ الفترة الضريبية الحالية — UAE VAT</div>
-    <div class="period-dates">مايو — يونيو — يوليو 2026</div>
-    <div class="period-sub">موعد تقديم الإقرار: 28 يوليو 2026</div>
+    <div class="period-dates" id="vat-period-dates">جارٍ التحميل...</div>
+    <div class="period-sub" id="vat-period-sub"></div>
   </div>
   <div id="vat-deadline-alert"></div>
   <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
@@ -385,17 +385,18 @@ function renderHome(){
   const vI=exp.reduce((s,i)=>s+(+i.vat_amount||0),0);
   const nV=vO-vI, pf=tR-tE;
   const aP=projects.filter(p=>p.status==='نشط').length||projects.length;
-  const today=new Date(), m=today.getMonth();
-  const dl=new Date(today.getFullYear(),6,28);
-  const dL=Math.ceil((dl-today)/86400000);
+  const today=new Date(), q=getVatQuarter();
+  const dL=Math.ceil((q.dl-today)/86400000);
+  const dlStr=`${q.dl.getDate()}/${q.dl.getMonth()+1}/${q.dl.getFullYear()}`;
   const el=document.getElementById('home-alert');
-  if(m>=4&&m<=6){
-    if(dL<=30&&dL>0)
-      el.innerHTML=`<div class="alert alert-r">⚠️ موعد الإقرار الضريبي بعد <strong>${dL} يوم</strong> — 28 يوليو 2026<br><small style="font-weight:400">صافي VAT المستحق: ${fmtD(nV)} AED</small></div>`;
-    else if(dL<=0)
+  const inPeriod=q.months.includes(today.getMonth())||today.getMonth()===q.sub;
+  if(inPeriod){
+    if(dL<=0)
       el.innerHTML=`<div class="alert alert-r">🚨 <strong>انتهى موعد تقديم الإقرار الضريبي!</strong> يرجى التقديم فوراً.</div>`;
+    else if(dL<=30)
+      el.innerHTML=`<div class="alert alert-r">⚠️ موعد الإقرار الضريبي بعد <strong>${dL} يوم</strong> — ${dlStr}<br><small style="font-weight:400">صافي VAT المستحق: ${fmtD(nV)} AED</small></div>`;
     else
-      el.innerHTML=`<div class="alert alert-gold">🏛️ الفترة الضريبية نشطة (مايو–يوليو 2026)<br><small style="font-weight:400">صافي VAT: <strong>${fmtD(nV)} AED</strong> — الموعد: 28 يوليو</small></div>`;
+      el.innerHTML=`<div class="alert alert-gold">🏛️ الفترة الضريبية: ${q.nameAr}<br><small style="font-weight:400">صافي VAT: <strong>${fmtD(nV)} AED</strong> — الموعد: ${dlStr}</small></div>`;
   } else {
     el.innerHTML='';
   }
@@ -566,28 +567,64 @@ function exportMat(){
   XLSX.writeFile(wb,`تقدير_${document.getElementById('mat-proj').value||'مشروع'}.xlsx`);
 }
 
-// ── VAT ──
-function renderVatDeadline(){
-  const today=new Date(), m=today.getMonth();
-  const dl=new Date(today.getFullYear(),6,28);
-  const dL=Math.ceil((dl-today)/86400000);
-  const el=document.getElementById('vat-deadline-alert');
-  if(m>=4&&m<=6){
-    if(dL<=14&&dL>0)
-      el.innerHTML=`<div class="alert alert-r">🚨 متبقي <strong>${dL} يوم</strong> فقط على الموعد النهائي!</div>`;
-    else if(dL<=0)
-      el.innerHTML=`<div class="alert alert-r">🚨 انتهى الموعد! يرجى التواصل مع الهيئة الاتحادية للضرائب.</div>`;
-    else
-      el.innerHTML=`<div class="alert alert-gold">⏰ متبقي <strong>${dL} يوم</strong> على موعد تقديم الإقرار</div>`;
-  } else {
-    el.innerHTML='';
+// ── VAT — دورة ربع سنوية ──
+/*
+  الأرباع:
+  ف/م/أ  (1,2,3)  → تقديم بنهاية مايو   (4)
+  م/ي/ي  (4,5,6)  → تقديم بنهاية أغسطس  (7)
+  أ/س/أ  (7,8,9)  → تقديم بنهاية نوفمبر (10)
+  ن/د/ي  (10,11,0)→ تقديم بنهاية فبراير (1 السنة القادمة)
+*/
+function getVatQuarter(){
+  const today=new Date(), y=today.getFullYear(), m=today.getMonth();
+  const QUARTERS=[
+    {months:[1,2,3], sub:4,  nameAr:'فبراير — مارس — أبريل',
+     from:`${y}-02-01`, to:`${y}-04-30`,
+     dl:new Date(y,4,28)},
+    {months:[4,5,6], sub:7,  nameAr:'مايو — يونيو — يوليو',
+     from:`${y}-05-01`, to:`${y}-07-31`,
+     dl:new Date(y,7,28)},
+    {months:[7,8,9], sub:10, nameAr:'أغسطس — سبتمبر — أكتوبر',
+     from:`${y}-08-01`, to:`${y}-10-31`,
+     dl:new Date(y,10,28)},
+    {months:[10,11], sub:1,  nameAr:'نوفمبر — ديسمبر — يناير',
+     from:`${y}-11-01`, to:`${y+1}-01-31`,
+     dl:new Date(y+1,1,28)},
+  ];
+  // يناير ينتمي لربع نوفمبر-ديسمبر-يناير للسنة السابقة
+  if(m===0){
+    return {months:[10,11,0], sub:1, nameAr:'نوفمبر — ديسمبر — يناير',
+      from:`${y-1}-11-01`, to:`${y}-01-31`, dl:new Date(y,1,28)};
   }
+  return QUARTERS.find(q=>q.months.includes(m)||m===q.sub)||QUARTERS[1];
 }
+
+function renderVatDeadline(){
+  const today=new Date(), q=getVatQuarter();
+  const dL=Math.ceil((q.dl-today)/86400000);
+  const dlStr=`${q.dl.getDate()}/${q.dl.getMonth()+1}/${q.dl.getFullYear()}`;
+  // بانر الفترة
+  document.getElementById('vat-period-dates').textContent=q.nameAr+' '+q.dl.getFullYear().toString().replace(/(\d{4})/,(_,yr)=>{ const s=q.from.slice(0,4); return s===yr?s:`${s}–${yr}`; }).replace(/\d{4}–(\d{4})/,'$1');
+  // أبسط: نعرض السنة من تاريخ البداية
+  document.getElementById('vat-period-dates').textContent=`${q.nameAr} ${q.from.slice(0,4)}`;
+  document.getElementById('vat-period-sub').textContent=`موعد تقديم الإقرار: ${dlStr}`;
+  // تنبيه الموعد
+  const el=document.getElementById('vat-deadline-alert');
+  if(dL<=0)
+    el.innerHTML=`<div class="alert alert-r">🚨 انتهى الموعد! يرجى التواصل مع الهيئة الاتحادية للضرائب فوراً.</div>`;
+  else if(dL<=14)
+    el.innerHTML=`<div class="alert alert-r">🚨 متبقي <strong>${dL} يوم</strong> فقط — الموعد ${dlStr}</div>`;
+  else if(dL<=45)
+    el.innerHTML=`<div class="alert alert-gold">⏰ متبقي <strong>${dL} يوم</strong> على موعد تقديم الإقرار</div>`;
+  else
+    el.innerHTML=`<div class="alert alert-t">✅ متبقي ${dL} يوم على الموعد — الفترة الضريبية نشطة</div>`;
+}
+
 function initVatDates(){
   if(!document.getElementById('vat-from').value){
-    const y=new Date().getFullYear();
-    document.getElementById('vat-from').value=`${y}-05-01`;
-    document.getElementById('vat-to').value=`${y}-07-31`;
+    const q=getVatQuarter();
+    document.getElementById('vat-from').value=q.from;
+    document.getElementById('vat-to').value=q.to;
   }
 }
 function loadVat(){
@@ -644,6 +681,9 @@ async function sendMsg(){
   box.scrollTop=box.scrollHeight;
   try{
     const today=new Date();
+    const qtr=getVatQuarter();
+    const qDlStr=`${qtr.dl.getDate()}/${qtr.dl.getMonth()+1}/${qtr.dl.getFullYear()}`;
+    const qDaysLeft=Math.ceil((qtr.dl-today)/86400000);
     const exp=invoices.filter(i=>i.type==='expense');
     const rev=invoices.filter(i=>i.type==='revenue');
     const tE=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
@@ -667,6 +707,10 @@ async function sendMsg(){
 - ضريبة المدخلات: ${vI.toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
 - صافي VAT المستحق: ${(vO-vI).toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
 
+🏛️ الفترة الضريبية الحالية: ${qtr.nameAr} ${qtr.from.slice(0,4)}
+📅 موعد تقديم الإقرار: ${qDlStr} (متبقي ${qDaysLeft} يوم)
+📌 دورة الإقرارات: كل 3 أشهر (ف/م/أ → مايو | م/ي/ي → أغسطس | أ/س/أ → نوفمبر | ن/د/ي → فبراير)
+
 📋 بيانات الفواتير التفصيلية:
 ${JSON.stringify(ctx)}
 
@@ -674,7 +718,7 @@ ${JSON.stringify(ctx)}
 1. أجب مباشرةً وباحترافية عالية بالعربية دون إحالة لأي جهة خارجية
 2. أنت المحاسب — لديك كل الصلاحيات للإجابة على أي سؤال مالي
 3. قدّم الأرقام بدقة مع العملة (AED)
-4. للأسئلة عن الضريبة: الفترة الحالية مايو-يوليو 2026، الموعد 28 يوليو
+4. للأسئلة عن الضريبة: استخدم بيانات الفترة الحالية وأخبر المستخدم بصافي VAT والموعد القادم
 5. قدّم توصيات مالية عملية عند الحاجة
 6. إذا كان السؤال خارج نطاق البيانات المتاحة، وضّح ذلك واقترح الحل`;
     const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({system,messages:[{role:'user',content:q}],max_tokens:1200})});
