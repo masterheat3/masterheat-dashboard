@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0ea5e9">
+<meta name="theme-color" content="#1a0533">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,108 +18,164 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-body{font-family:'Tajawal',sans-serif;background:#0a0f1e;color:#e2e8f0;direction:rtl;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#07080f;--bg2:#0d1117;--card:#111827;--card2:#1a2235;
+  --border:#1f2d45;--border2:#2a3f5f;
+  --pri:#6366f1;--pri2:#818cf8;--pri-glow:rgba(99,102,241,.25);
+  --teal:#14b8a6;--teal2:#2dd4bf;--teal-glow:rgba(20,184,166,.2);
+  --gold:#f59e0b;--gold2:#fbbf24;
+  --green:#10b981;--red:#ef4444;--orange:#f97316;
+  --txt:#e2e8f0;--txt2:#94a3b8;--txt3:#475569;
+}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .page{display:none;padding:0 12px 90px;max-width:500px;margin:0 auto}
 .page.active{display:block}
-.topbar{background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(56,189,248,.2);position:sticky;top:0;z-index:100}
+
+/* ── Topbar ── */
+.topbar{background:linear-gradient(135deg,#0d1117,#111827);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
 .topbar-logo{display:flex;align-items:center;gap:10px}
-.topbar-title{font-size:1.1rem;font-weight:900;color:#fff}
-.topbar-sub{font-size:.66rem;color:#64748b;margin-top:1px}
-.topbar-time{color:#38bdf8;font-size:.72rem;font-weight:700}
-.topbar-refresh{background:none;border:none;color:#64748b;font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:8px}
-.topbar-refresh:active{color:#38bdf8}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
-.stat-card{background:#1e293b;border:1px solid #1e3a5f;border-radius:14px;padding:14px 10px;text-align:center}
-.stat-card.full{grid-column:1/-1}
-.stat-icon{font-size:1.3rem;margin-bottom:4px}
-.stat-val{font-size:1.2rem;font-weight:900;color:#38bdf8;margin:3px 0}
-.stat-val.g{color:#22c55e}.stat-val.r{color:#ef4444}.stat-val.o{color:#f97316}
-.stat-lbl{color:#64748b;font-size:.68rem}
-.alert{border-radius:12px;padding:11px 14px;font-size:.83rem;font-weight:700;margin:10px 0;display:flex;align-items:center;gap:8px}
-.alert-r{background:#7f1d1d;color:#fca5a5}
-.alert-b{background:#1e3a5f;color:#93c5fd}
-.alert-g{background:#064e3b;color:#6ee7b7}
-.sec-hdr{color:#e2e8f0;font-size:.9rem;font-weight:900;padding:12px 0 8px;border-bottom:2px solid #1e3a5f;margin-bottom:10px}
-.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid #1e3a5f;margin-bottom:14px}
+.topbar-title{font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:-.3px}
+.topbar-sub{font-size:.65rem;color:var(--txt3);margin-top:1px}
+.topbar-time{color:var(--teal2);font-size:.72rem;font-weight:700;background:var(--teal-glow);padding:3px 8px;border-radius:20px;border:1px solid rgba(20,184,166,.3)}
+.topbar-refresh{background:none;border:1px solid var(--border);color:var(--txt3);font-size:1.1rem;cursor:pointer;padding:5px 10px;border-radius:8px;transition:.2s}
+.topbar-refresh:active{color:var(--pri2);border-color:var(--pri)}
+
+/* ── Cards ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 12px;text-align:center;position:relative;overflow:hidden;transition:.2s}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(99,102,241,.05),transparent);pointer-events:none}
+.stat-card.full{grid-column:1/-1;cursor:pointer}
+.stat-card.full:active{opacity:.8}
+.stat-icon{font-size:1.4rem;margin-bottom:6px}
+.stat-val{font-size:1.25rem;font-weight:900;color:var(--pri2);margin:4px 0;letter-spacing:-.5px}
+.stat-val.g{color:var(--green)}.stat-val.r{color:var(--red)}.stat-val.o{color:var(--orange)}.stat-val.t{color:var(--teal2)}.stat-val.gold{color:var(--gold2)}
+.stat-lbl{color:var(--txt3);font-size:.68rem;font-weight:500}
+
+/* ── Alerts ── */
+.alert{border-radius:14px;padding:12px 16px;font-size:.83rem;font-weight:700;margin:10px 0;display:flex;align-items:flex-start;gap:10px;line-height:1.5}
+.alert-r{background:linear-gradient(135deg,rgba(239,68,68,.15),rgba(239,68,68,.05));color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.alert-b{background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(99,102,241,.05));color:#a5b4fc;border:1px solid rgba(99,102,241,.3)}
+.alert-g{background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));color:#6ee7b7;border:1px solid rgba(16,185,129,.3)}
+.alert-t{background:linear-gradient(135deg,rgba(20,184,166,.15),rgba(20,184,166,.05));color:#5eead4;border:1px solid rgba(20,184,166,.3)}
+.alert-gold{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
+
+/* ── Tables ── */
+.sec-hdr{color:#fff;font-size:.9rem;font-weight:900;padding:14px 0 8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+.tbl-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);margin-bottom:14px;background:var(--card)}
 table{width:100%;border-collapse:collapse;font-size:.78rem}
-thead tr{background:#1e3a5f}
-th{padding:9px 8px;text-align:right;color:#93c5fd;font-weight:700;white-space:nowrap}
-td{padding:8px 8px;border-bottom:1px solid #1e293b;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+thead tr{background:linear-gradient(135deg,var(--card2),var(--card))}
+th{padding:10px 8px;text-align:right;color:var(--pri2);font-weight:700;white-space:nowrap;font-size:.75rem}
+td{padding:9px 8px;border-bottom:1px solid rgba(31,45,69,.6);color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 tr:last-child td{border:none}
-tr:nth-child(even) td{background:rgba(30,41,59,.4)}
-.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.7rem;font-weight:700}
-.badge-out{background:rgba(239,68,68,.15);color:#ef4444}
-.badge-in{background:rgba(34,197,94,.15);color:#22c55e}
-.chart-wrap{background:#1e293b;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #1e3a5f}
-.chart-wrap canvas{max-height:220px}
-.inp{background:#1e293b;border:1px solid #334155;border-radius:10px;color:#e2e8f0;padding:9px 12px;font-family:'Tajawal',sans-serif;font-size:.85rem;direction:rtl;width:100%;outline:none;display:block;margin-bottom:8px}
-.inp:focus{border-color:#38bdf8}
+tr:hover td{background:rgba(99,102,241,.04)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:.7rem;font-weight:700}
+.badge-out{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.badge-in{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.2)}
+
+/* ── Chart ── */
+.chart-wrap{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;border:1px solid var(--border)}
+.chart-wrap canvas{max-height:200px}
+
+/* ── Inputs ── */
+.inp{background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--txt);padding:10px 14px;font-family:'Tajawal',sans-serif;font-size:.85rem;direction:rtl;width:100%;outline:none;display:block;margin-bottom:8px;transition:.2s}
+.inp:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-glow)}
 select.inp{cursor:pointer}
-.btn{display:block;width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;text-align:center;margin:8px 0}
-.btn:active{opacity:.8}
-.btn.g{background:linear-gradient(135deg,#22c55e,#16a34a)}
-.progress-wrap{background:#1e293b;border-radius:8px;height:10px;overflow:hidden;margin:8px 0}
-.progress-bar{height:100%;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
-.progress-bar.warn{background:linear-gradient(135deg,#f97316,#ea580c)}
-.progress-bar.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0f172a;border-top:1px solid #1e3a5f;display:flex;z-index:200;padding:6px 0 max(8px,env(safe-area-inset-bottom))}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border-radius:10px;margin:0 2px;border:none;background:none}
-.nav-item.active{background:rgba(56,189,248,.12)}
+
+/* ── Buttons ── */
+.btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,var(--pri),#4f46e5);color:#fff;border:none;border-radius:13px;font-family:'Tajawal',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;text-align:center;margin:8px 0;transition:.2s;letter-spacing:.2px}
+.btn:active{opacity:.8;transform:scale(.98)}
+.btn.teal{background:linear-gradient(135deg,var(--teal),#0d9488)}
+.btn.gold{background:linear-gradient(135deg,var(--gold),#d97706)}
+.btn-del{background:none;border:1px solid rgba(239,68,68,.4);color:#f87171;border-radius:8px;padding:4px 8px;font-size:.72rem;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;white-space:nowrap;transition:.2s}
+.btn-del:active{background:rgba(239,68,68,.15)}
+
+/* ── Progress ── */
+.progress-wrap{background:var(--card2);border-radius:8px;height:8px;overflow:hidden;margin:8px 0}
+.progress-bar{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--pri),var(--pri2));transition:width .6s ease}
+.progress-bar.warn{background:linear-gradient(90deg,var(--orange),#ea580c)}
+.progress-bar.danger{background:linear-gradient(90deg,var(--red),#dc2626)}
+
+/* ── Bottom Nav ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(13,17,23,.95);border-top:1px solid var(--border);display:flex;z-index:200;padding:6px 0 max(8px,env(safe-area-inset-bottom));backdrop-filter:blur(20px)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border-radius:12px;margin:0 3px;border:none;background:none;transition:.2s}
+.nav-item.active{background:var(--pri-glow)}
 .nav-ico{font-size:1.25rem;line-height:1}
-.nav-lbl{font-size:.59rem;color:#64748b;font-family:'Tajawal',sans-serif}
-.nav-item.active .nav-lbl{color:#38bdf8}
-.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 190px);min-height:350px}
-.chat-msgs{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:88%;padding:10px 14px;border-radius:14px;font-size:.83rem;line-height:1.6;word-break:break-word}
-.msg.user{background:#1e3a5f;color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:4px}
-.msg.bot{background:#1e293b;border:1px solid #334155;color:#cbd5e1;align-self:flex-end;border-bottom-right-radius:4px}
-.msg.bot strong{color:#38bdf8}.msg.bot em{color:#a78bfa}
-.msg.bot code{background:#0f172a;padding:1px 5px;border-radius:4px;font-size:.76rem;color:#22c55e}
-.msg.bot ul{padding-right:16px;margin-top:4px}.msg.bot li{margin:2px 0}
-.typing-dots{display:flex;align-items:center;gap:5px;padding:10px 14px;background:#1e293b;border-radius:14px;align-self:flex-end;border:1px solid #334155}
-.dot{width:6px;height:6px;border-radius:50%;background:#38bdf8;animation:bounce .8s infinite}
+.nav-lbl{font-size:.59rem;color:var(--txt3);font-family:'Tajawal',sans-serif;font-weight:600}
+.nav-item.active .nav-lbl{color:var(--pri2)}
+.nav-item.active .nav-ico{filter:drop-shadow(0 0 6px var(--pri2))}
+
+/* ── Chat ── */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 185px);min-height:350px}
+.chat-msgs{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.msg{max-width:90%;padding:11px 15px;border-radius:16px;font-size:.83rem;line-height:1.7;word-break:break-word}
+.msg.user{background:linear-gradient(135deg,var(--pri),#4f46e5);color:#fff;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 4px 15px var(--pri-glow)}
+.msg.bot{background:var(--card);border:1px solid var(--border);color:var(--txt2);align-self:flex-end;border-bottom-right-radius:4px}
+.msg.bot strong{color:var(--pri2)}.msg.bot em{color:var(--teal2)}
+.msg.bot code{background:var(--bg2);padding:1px 6px;border-radius:5px;font-size:.76rem;color:var(--green)}
+.msg.bot ul{padding-right:16px;margin-top:4px}.msg.bot li{margin:3px 0}
+.typing-dots{display:flex;align-items:center;gap:5px;padding:10px 14px;background:var(--card);border-radius:14px;align-self:flex-end;border:1px solid var(--border)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--pri);animation:bounce .8s infinite}
 .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
-@keyframes bounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+@keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1.1);opacity:1}}
 .chat-row{display:flex;gap:8px;padding:10px 0 0}
 .chat-row .inp{flex:1;margin:0}
-.send-btn{background:linear-gradient(135deg,#0ea5e9,#0284c7);border:none;border-radius:10px;color:#fff;padding:0 16px;font-size:1.2rem;cursor:pointer}
-.loader{position:fixed;inset:0;background:#0a0f1e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;transition:opacity .4s}
-.loader-ico{font-size:3.5rem;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{opacity:.5;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
-.loader-txt{color:#38bdf8;font-size:1.1rem;font-weight:900}
-.loader-sub{color:#475569;font-size:.8rem}
-.empty{text-align:center;padding:40px 20px;color:#475569}
-.empty-ico{font-size:3rem;margin-bottom:12px}
-.skeleton{background:linear-gradient(90deg,#1e293b 25%,#273548 50%,#1e293b 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:20px;margin:4px 0}
+.send-btn{background:linear-gradient(135deg,var(--pri),#4f46e5);border:none;border-radius:12px;color:#fff;padding:0 18px;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 15px var(--pri-glow)}
+
+/* ── Loader ── */
+.loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;transition:opacity .5s}
+.loader-ring{width:60px;height:60px;border:3px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{color:var(--pri2);font-size:1.2rem;font-weight:900;letter-spacing:.5px}
+.loader-sub{color:var(--txt3);font-size:.78rem}
+
+/* ── Misc ── */
+.empty{text-align:center;padding:40px 20px;color:var(--txt3)}
+.empty-ico{font-size:3rem;margin-bottom:12px;opacity:.5}
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:10px;height:20px;margin:5px 0}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.tab-row{display:flex;border-bottom:2px solid #1e3a5f;margin:12px 0 0}
-.tab-btn{flex:1;background:none;border:none;color:#64748b;font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:700;padding:10px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
-.tab-btn.active{color:#38bdf8;border-bottom-color:#38bdf8}
+.tab-row{display:flex;background:var(--card2);border-radius:14px;padding:4px;margin:12px 0 0;gap:4px}
+.tab-btn{flex:1;background:none;border:none;color:var(--txt3);font-family:'Tajawal',sans-serif;font-size:.82rem;font-weight:700;padding:9px;cursor:pointer;border-radius:10px;transition:.2s}
+.tab-btn.active{background:var(--pri);color:#fff;box-shadow:0 4px 12px var(--pri-glow)}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:500px;border-top:1px solid var(--border2)}
+.modal-title{font-size:1rem;font-weight:900;color:#fff;margin-bottom:16px;text-align:center}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-actions .btn{margin:0;flex:1}
+.vat-period-banner{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(99,102,241,.08));border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:14px 16px;margin:12px 0;text-align:center}
+.vat-period-banner .period-label{color:var(--gold2);font-size:.78rem;font-weight:700;margin-bottom:4px}
+.vat-period-banner .period-dates{color:#fff;font-size:1rem;font-weight:900}
+.vat-period-banner .period-sub{color:var(--txt3);font-size:.72rem;margin-top:4px}
 </style>
 </head>
 <body>
 
 <div class="loader" id="loader">
-  <div class="loader-ico">🏗️</div>
+  <div class="loader-ring"></div>
   <div class="loader-txt">ماستر هيت</div>
   <div class="loader-sub">للصيانة والمقاولات العامة</div>
 </div>
 
 <div class="topbar">
   <div class="topbar-logo">
-    <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-      <rect width="34" height="34" rx="9" fill="#0ea5e9" fill-opacity=".15"/>
-      <rect x="7" y="16" width="20" height="13" rx="2" fill="#0ea5e9"/>
-      <rect x="11" y="9" width="12" height="9" rx="2" fill="#38bdf8"/>
-      <rect x="10" y="19" width="5" height="5" rx="1" fill="white" fill-opacity=".7"/>
-      <rect x="19" y="19" width="5" height="5" rx="1" fill="white" fill-opacity=".7"/>
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="10" fill="url(#lg)"/>
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#14b8a6"/></linearGradient></defs>
+      <rect x="8" y="17" width="20" height="13" rx="2.5" fill="white" fill-opacity=".9"/>
+      <rect x="12" y="10" width="12" height="9" rx="2" fill="white" fill-opacity=".6"/>
+      <rect x="11" y="20" width="5" height="5" rx="1" fill="#6366f1"/>
+      <rect x="20" y="20" width="5" height="5" rx="1" fill="#14b8a6"/>
     </svg>
     <div>
       <div class="topbar-title" id="tb-title">ماستر هيت</div>
       <div class="topbar-sub" id="tb-sub">للمقاولات العامة</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
+  <div style="display:flex;align-items:center;gap:8px">
     <span class="topbar-time" id="tb-time"></span>
     <button class="topbar-refresh" onclick="refreshData()">↻</button>
   </div>
@@ -129,11 +185,11 @@ select.inp{cursor:pointer}
 <div class="page active" id="page-home">
   <div id="home-alert"></div>
   <div class="stat-grid" id="home-stats">
-    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
-    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
-    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
-    <div class="stat-card"><div class="skeleton" style="height:30px"></div><div class="skeleton" style="height:12px;margin-top:6px"></div></div>
-    <div class="stat-card full"><div class="skeleton" style="height:24px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:28px;margin-bottom:8px"></div><div class="skeleton" style="height:12px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:28px;margin-bottom:8px"></div><div class="skeleton" style="height:12px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:28px;margin-bottom:8px"></div><div class="skeleton" style="height:12px"></div></div>
+    <div class="stat-card"><div class="skeleton" style="height:28px;margin-bottom:8px"></div><div class="skeleton" style="height:12px"></div></div>
+    <div class="stat-card full"><div class="skeleton" style="height:22px"></div></div>
   </div>
   <div class="chart-wrap" id="home-chart" style="display:none">
     <div class="sec-hdr">📊 المصروفات حسب المشروع</div>
@@ -145,8 +201,8 @@ select.inp{cursor:pointer}
 <!-- ════ المشاريع ════ -->
 <div class="page" id="page-projects">
   <div class="tab-row">
-    <button class="tab-btn active" id="t-budget" onclick="switchTab('budget')">📈 مقارنة الميزانية</button>
-    <button class="tab-btn" id="t-materials" onclick="switchTab('materials')">📦 جدول المواد</button>
+    <button class="tab-btn active" id="t-budget" onclick="switchTab('budget')">📈 الميزانية</button>
+    <button class="tab-btn" id="t-materials" onclick="switchTab('materials')">📦 المواد</button>
   </div>
   <div id="tc-budget">
     <div style="margin-top:12px">
@@ -154,7 +210,7 @@ select.inp{cursor:pointer}
         <option value="">اختر المشروع...</option>
       </select>
       <div id="budget-row" style="display:none">
-        <label style="color:#94a3b8;font-size:.78rem;display:block;margin-bottom:3px">الميزانية (AED)</label>
+        <label style="color:var(--txt2);font-size:.78rem;display:block;margin-bottom:4px">الميزانية (AED)</label>
         <input type="number" class="inp" id="budget-input" value="100000" oninput="updateBudget()">
       </div>
     </div>
@@ -163,27 +219,33 @@ select.inp{cursor:pointer}
   <div id="tc-materials" style="display:none">
     <div class="alert alert-b" style="margin-top:12px">📦 ارفع جدول المواد لتقدير التكلفة بالذكاء الاصطناعي</div>
     <input type="text" class="inp" id="mat-proj" placeholder="اسم المشروع (اختياري)">
-    <label style="display:block;background:#1e293b;border:2px dashed #334155;border-radius:12px;padding:28px;text-align:center;cursor:pointer;color:#64748b;font-size:.85rem;margin-bottom:10px">
+    <label style="display:block;background:var(--card2);border:2px dashed var(--border2);border-radius:14px;padding:28px;text-align:center;cursor:pointer;color:var(--txt3);font-size:.85rem;margin-bottom:10px;transition:.2s">
       <div style="font-size:2.2rem;margin-bottom:8px">📁</div>
       اضغط لرفع Excel أو CSV
       <input type="file" accept=".xlsx,.xls,.csv" id="mat-file" style="display:none" onchange="handleMat()">
     </label>
     <div id="mat-preview"></div>
-    <button class="btn" id="mat-btn" onclick="estimateCost()" style="display:none">🤖 تقدير التكلفة</button>
+    <button class="btn teal" id="mat-btn" onclick="estimateCost()" style="display:none">🤖 تقدير التكلفة</button>
     <div id="mat-result"></div>
-    <button class="btn g" id="mat-dl" onclick="exportMat()" style="display:none">⬇️ تحميل Excel</button>
+    <button class="btn gold" id="mat-dl" onclick="exportMat()" style="display:none">⬇️ تحميل Excel</button>
   </div>
 </div>
 
 <!-- ════ الضريبة ════ -->
 <div class="page" id="page-vat">
-  <div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">
+  <div class="vat-period-banner" id="vat-banner">
+    <div class="period-label">🏛️ الفترة الضريبية الحالية — UAE VAT</div>
+    <div class="period-dates">مايو — يونيو — يوليو 2026</div>
+    <div class="period-sub">موعد تقديم الإقرار: 28 يوليو 2026</div>
+  </div>
+  <div id="vat-deadline-alert"></div>
+  <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
     <div style="flex:1;min-width:130px">
-      <label style="color:#94a3b8;font-size:.75rem;display:block;margin-bottom:3px">من</label>
+      <label style="color:var(--txt2);font-size:.75rem;display:block;margin-bottom:4px">من</label>
       <input type="date" class="inp" id="vat-from" style="margin:0">
     </div>
     <div style="flex:1;min-width:130px">
-      <label style="color:#94a3b8;font-size:.75rem;display:block;margin-bottom:3px">إلى</label>
+      <label style="color:var(--txt2);font-size:.75rem;display:block;margin-bottom:4px">إلى</label>
       <input type="date" class="inp" id="vat-to" style="margin:0">
     </div>
   </div>
@@ -191,7 +253,7 @@ select.inp{cursor:pointer}
   <div id="vat-stats"></div>
   <div class="chart-wrap" id="vat-chart-box" style="display:none"><canvas id="vat-chart"></canvas></div>
   <div id="vat-table"></div>
-  <button class="btn g" id="vat-dl" onclick="exportVat()" style="display:none">⬇️ تصدير Excel</button>
+  <button class="btn teal" id="vat-dl" onclick="exportVat()" style="display:none">⬇️ تصدير Excel</button>
 </div>
 
 <!-- ════ الفواتير ════ -->
@@ -211,18 +273,36 @@ select.inp{cursor:pointer}
   </div>
   <div id="inv-summary"></div>
   <div id="inv-table"></div>
-  <button class="btn g" onclick="exportInv()" style="margin-top:4px">⬇️ تصدير Excel</button>
+  <button class="btn teal" onclick="exportInv()" style="margin-top:4px">⬇️ تصدير Excel</button>
 </div>
 
 <!-- ════ المساعد ════ -->
 <div class="page" id="page-ai">
   <div class="chat-wrap" style="margin-top:12px">
     <div class="chat-msgs" id="chat-msgs">
-      <div class="msg bot">👋 مرحباً! أنا مساعدك الذكي لشركة <strong>ماستر هيت</strong>.<br><br>يمكنني مساعدتك في تحليل الفواتير، حساب المصروفات، وتقرير ضريبة القيمة المضافة.<br><br>اسألني أي شيء! 💬</div>
+      <div class="msg bot">💼 مرحباً! أنا <strong>محاسب ماستر هيت</strong> الذكي.<br><br>
+      لديّ صلاحية الوصول الكامل لجميع الفواتير والمشاريع والتقارير المالية.<br><br>
+      اسألني عن:<br>
+      • <em>إجمالي المصروفات أو الإيرادات</em><br>
+      • <em>حساب ضريبة القيمة المضافة</em><br>
+      • <em>مقارنة المشاريع</em><br>
+      • <em>أي سؤال مالي يخص الشركة</em> 💬</div>
     </div>
     <div class="chat-row">
-      <input class="inp" id="chat-inp" type="text" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <input class="inp" id="chat-inp" type="text" placeholder="اسألني عن الفواتير، المشاريع، الضريبة..." onkeydown="if(event.key==='Enter')sendMsg()">
       <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal حذف -->
+<div class="modal-bg" id="del-modal" style="display:none" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">🗑️ حذف الفاتورة</div>
+    <div style="text-align:center;color:var(--txt2);font-size:.88rem;line-height:1.6" id="del-info"></div>
+    <div class="modal-actions">
+      <button class="btn" style="background:var(--card2);color:var(--txt2);border:1px solid var(--border)" onclick="closeModal()">إلغاء</button>
+      <button class="btn" style="background:linear-gradient(135deg,#ef4444,#dc2626)" onclick="confirmDelete()">حذف نهائياً</button>
     </div>
   </div>
 </div>
@@ -232,7 +312,7 @@ select.inp{cursor:pointer}
   <button class="nav-item" onclick="goTo('projects')" id="nav-projects"><span class="nav-ico">📊</span><span class="nav-lbl">المشاريع</span></button>
   <button class="nav-item" onclick="goTo('vat')" id="nav-vat"><span class="nav-ico">🧾</span><span class="nav-lbl">الضريبة</span></button>
   <button class="nav-item" onclick="goTo('invoices')" id="nav-invoices"><span class="nav-ico">📋</span><span class="nav-lbl">الفواتير</span></button>
-  <button class="nav-item" onclick="goTo('ai')" id="nav-ai"><span class="nav-ico">🤖</span><span class="nav-lbl">المساعد</span></button>
+  <button class="nav-item" onclick="goTo('ai')" id="nav-ai"><span class="nav-ico">🤖</span><span class="nav-lbl">المحاسب</span></button>
 </nav>
 
 <script>
@@ -242,6 +322,7 @@ const AI_URL   = `${SUPA_URL}/functions/v1/ai-chat`;
 const db = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 let invoices=[], projects=[], filteredInv=[], projChrt=null, vatChrt=null, matRows=null, vatData=null;
+let delTargetId=null;
 
 // ── ساعة ──
 function tick(){ const n=new Date(); document.getElementById('tb-time').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
@@ -268,7 +349,7 @@ function renderMd(t){
 async function loadData(){
   try{
     const[ir,pr]=await Promise.all([
-      db.from('invoices').select('*').order('created_at',{ascending:false}),
+      db.from('invoices').select('*').is('deleted_at',null).order('created_at',{ascending:false}),
       db.from('projects').select('*').order('id')
     ]);
     invoices=ir.data||[]; projects=pr.data||[]; filteredInv=[...invoices];
@@ -278,7 +359,7 @@ async function loadData(){
 function refreshData(){ loadData(); const r=document.querySelector('.page.active')?.id?.replace('page-',''); if(r==='invoices')filterInv(); }
 
 // ── التنقل ──
-const META={home:['ماستر هيت','للمقاولات العامة'],projects:['المشاريع','التحليل'],vat:['الضريبة','VAT Report'],invoices:['الفواتير','السجلات'],ai:['المساعد الذكي','GPT-4o']};
+const META={home:['ماستر هيت','للمقاولات العامة'],projects:['المشاريع','التحليل المالي'],vat:['تقرير الضريبة','UAE VAT'],invoices:['الفواتير','السجلات المالية'],ai:['المحاسب الذكي','مساعدك المالي']};
 function goTo(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
@@ -290,7 +371,7 @@ function goTo(p){
   window.scrollTo(0,0);
   if(p==='invoices')filterInv();
   if(p==='projects')populateProjSelect();
-  if(p==='vat')initVatDates();
+  if(p==='vat'){initVatDates();renderVatDeadline();}
   if(p==='ai')document.getElementById('chat-inp').focus();
 }
 
@@ -304,21 +385,33 @@ function renderHome(){
   const vI=exp.reduce((s,i)=>s+(+i.vat_amount||0),0);
   const nV=vO-vI, pf=tR-tE;
   const aP=projects.filter(p=>p.status==='نشط').length||projects.length;
-  const today=new Date(), dl=new Date(today.getFullYear(),6,28), dL=Math.ceil((dl-today)/86400000);
+  const today=new Date(), m=today.getMonth();
+  const dl=new Date(today.getFullYear(),6,28);
+  const dL=Math.ceil((dl-today)/86400000);
   const el=document.getElementById('home-alert');
-  if(today.getMonth()>=4&&today.getMonth()<=6&&dL<=30)
-    el.innerHTML=`<div class="alert alert-r">⚠️ موعد الإقرار الضريبي بعد <strong>${dL} يوم</strong></div>`;
-  else if(today.getMonth()>=4&&today.getMonth()<=6)
-    el.innerHTML=`<div class="alert alert-b">🏛️ الفترة الضريبية نشطة — صافي VAT: <strong>${fmtD(nV)} AED</strong></div>`;
+  if(m>=4&&m<=6){
+    if(dL<=30&&dL>0)
+      el.innerHTML=`<div class="alert alert-r">⚠️ موعد الإقرار الضريبي بعد <strong>${dL} يوم</strong> — 28 يوليو 2026<br><small style="font-weight:400">صافي VAT المستحق: ${fmtD(nV)} AED</small></div>`;
+    else if(dL<=0)
+      el.innerHTML=`<div class="alert alert-r">🚨 <strong>انتهى موعد تقديم الإقرار الضريبي!</strong> يرجى التقديم فوراً.</div>`;
+    else
+      el.innerHTML=`<div class="alert alert-gold">🏛️ الفترة الضريبية نشطة (مايو–يوليو 2026)<br><small style="font-weight:400">صافي VAT: <strong>${fmtD(nV)} AED</strong> — الموعد: 28 يوليو</small></div>`;
+  } else {
+    el.innerHTML='';
+  }
 
   document.getElementById('home-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val">${fmt(tE)}</div><div class="stat-lbl">المصروفات AED</div></div>
+    <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val r">${fmt(tE)}</div><div class="stat-lbl">المصروفات AED</div></div>
     <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g">${fmt(tR)}</div><div class="stat-lbl">الإيرادات AED</div></div>
-    <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-val ${pf>=0?'g':'r'}">${fmt(pf)}</div><div class="stat-lbl">صافي الربح AED</div></div>
-    <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'r':'g'}">${fmt(nV)}</div><div class="stat-lbl">صافي VAT AED</div></div>
-    <div class="stat-card full" onclick="goTo('projects')" style="cursor:pointer">
-      <div class="stat-icon">🏗️</div><div class="stat-val">${aP} مشروع &nbsp;|&nbsp; ${invoices.length} فاتورة</div>
-      <div class="stat-lbl">اضغط لتفاصيل المشاريع ←</div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val ${pf>=0?'g':'r'}">${fmt(Math.abs(pf))}</div><div class="stat-lbl">${pf>=0?'صافي الربح':'صافي الخسارة'} AED</div></div>
+    <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'o':'t'}">${fmt(Math.abs(nV))}</div><div class="stat-lbl">${nV>0?'VAT مستحق':'VAT مسترد'} AED</div></div>
+    <div class="stat-card full" onclick="goTo('projects')">
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+        <div><div class="stat-icon">🏗️</div><div class="stat-val">${aP}</div><div class="stat-lbl">مشروع نشط</div></div>
+        <div style="width:1px;height:40px;background:var(--border)"></div>
+        <div><div class="stat-icon">📋</div><div class="stat-val">${invoices.length}</div><div class="stat-lbl">فاتورة مسجلة</div></div>
+      </div>
+      <div style="color:var(--txt3);font-size:.68rem;margin-top:8px">اضغط لتفاصيل المشاريع ←</div>
     </div>`;
 
   const pe={};
@@ -328,22 +421,22 @@ function renderHome(){
     document.getElementById('home-chart').style.display='block';
     if(projChrt)projChrt.destroy();
     projChrt=new Chart(document.getElementById('proj-chart'),{
-      type:'bar',data:{labels:labs,datasets:[{data:vals,backgroundColor:'rgba(14,165,233,.7)',borderRadius:8,borderSkipped:false}]},
+      type:'bar',data:{labels:labs,datasets:[{data:vals,backgroundColor:labs.map((_,i)=>['rgba(99,102,241,.75)','rgba(20,184,166,.75)','rgba(245,158,11,.75)','rgba(16,185,129,.75)'][i%4]),borderRadius:10,borderSkipped:false}]},
       options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} AED`}}},
-        scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{color:'rgba(255,255,255,.04)'}},
+        scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{display:false}},
                 y:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}
     });
   }
-  const rc=invoices.slice(0,10);
+  const rc=invoices.slice(0,8);
   document.getElementById('home-recent').innerHTML=rc.length?`
     <div class="sec-hdr">📋 آخر الفواتير</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>النوع</th><th>المورد</th><th>الإجمالي</th><th>المشروع</th></tr></thead>
       <tbody>${rc.map(i=>`<tr>
         <td><span class="badge ${i.type==='expense'?'badge-out':'badge-in'}">${i.type==='expense'?'📤 مصروف':'📥 إيراد'}</span></td>
-        <td>${trunc(i.vendor_name,14)}</td>
-        <td style="color:#38bdf8;font-weight:700">${fmt(i.total_amount)}</td>
-        <td>${trunc(i.project,12)}</td>
+        <td style="color:var(--txt)">${trunc(i.vendor_name,14)}</td>
+        <td style="color:var(--teal2);font-weight:700">${fmt(i.total_amount)}</td>
+        <td style="color:var(--txt2)">${trunc(i.project,12)}</td>
       </tr>`).join('')}</tbody>
     </table></div>`:'';
 }
@@ -354,6 +447,7 @@ function populateFilters(){
   document.getElementById('inv-proj').innerHTML='<option value="">كل المشاريع</option>'+ps.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
   populateProjSelect();
 }
+
 function filterInv(){
   const q=document.getElementById('inv-search').value.toLowerCase();
   const t=document.getElementById('inv-type').value;
@@ -368,17 +462,33 @@ function filterInv(){
   document.getElementById('inv-summary').innerHTML=`<div class="alert alert-b" style="margin:8px 0">📊 ${filteredInv.length} فاتورة — إجمالي: <strong>${fmtD(tot)} AED</strong></div>`;
   document.getElementById('inv-table').innerHTML=filteredInv.length?`
     <div class="tbl-wrap"><table>
-      <thead><tr><th>ن</th><th>رقم الفاتورة</th><th>المورد</th><th>المشروع</th><th>الإجمالي</th><th>التاريخ</th></tr></thead>
+      <thead><tr><th>ن</th><th>رقم الفاتورة</th><th>المورد</th><th>الإجمالي</th><th>المشروع</th><th>حذف</th></tr></thead>
       <tbody>${filteredInv.map(i=>`<tr>
         <td><span class="badge ${i.type==='expense'?'badge-out':'badge-in'}">${i.type==='expense'?'📤':'📥'}</span></td>
-        <td>${trunc(i.invoice_number,11)}</td>
-        <td>${trunc(i.vendor_name,13)}</td>
-        <td>${trunc(i.project,11)}</td>
-        <td style="color:#38bdf8;font-weight:700">${fmt(i.total_amount)}</td>
-        <td>${fmtDt(i.invoice_date)}</td>
+        <td style="color:var(--txt3);font-size:.73rem">${trunc(i.invoice_number,10)}</td>
+        <td style="color:var(--txt)">${trunc(i.vendor_name,13)}</td>
+        <td style="color:var(--teal2);font-weight:700">${fmt(i.total_amount)}</td>
+        <td style="color:var(--txt2)">${trunc(i.project,10)}</td>
+        <td><button class="btn-del" onclick="openDelModal(${i.id},'${esc(i.invoice_number||'')}','${esc(i.vendor_name||'')}')">🗑️</button></td>
       </tr>`).join('')}</tbody>
     </table></div>`:`<div class="empty"><div class="empty-ico">📭</div><div>لا توجد نتائج</div></div>`;
 }
+
+function openDelModal(id, num, vendor){
+  delTargetId=id;
+  document.getElementById('del-info').innerHTML=`هل تريد حذف الفاتورة <strong style="color:#f87171">${num||'بدون رقم'}</strong><br>المورد: ${vendor||'-'}`;
+  document.getElementById('del-modal').style.display='flex';
+}
+function closeModal(){ document.getElementById('del-modal').style.display='none'; delTargetId=null; }
+async function confirmDelete(){
+  if(!delTargetId)return;
+  try{
+    await db.from('invoices').delete().eq('id',delTargetId);
+    invoices=invoices.filter(i=>i.id!==delTargetId);
+    closeModal(); filterInv(); renderHome();
+  }catch(e){ alert('خطأ في الحذف: '+e.message); closeModal(); }
+}
+
 function exportInv(){
   const rows=filteredInv.map(i=>({'رقم الفاتورة':i.invoice_number||'','المورد':i.vendor_name||'','المشروع':i.project||'','النوع':i.type==='expense'?'مصروف':'إيراد','المبلغ الخاضع':i.taxable_amount||0,'الضريبة':i.vat_amount||0,'الإجمالي':i.total_amount||0,'التاريخ':i.invoice_date||''}));
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'الفواتير');
@@ -407,15 +517,17 @@ function updateBudget(){
   exp.forEach(i=>{const v=i.vendor_name||'غير معروف';vendors[v]=(vendors[v]||0)+(+i.total_amount||0);});
   const topV=Object.entries(vendors).sort((a,b)=>b[1]-a[1]).slice(0,5);
   document.getElementById('proj-report').innerHTML=`
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val">${fmt(actual)}</div><div class="stat-lbl">المصروف الفعلي AED</div></div>
+    <div class="stat-grid" style="margin-top:12px">
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val t">${fmt(actual)}</div><div class="stat-lbl">المصروف الفعلي AED</div></div>
       <div class="stat-card"><div class="stat-icon">📉</div><div class="stat-val ${vc}">${fmt(Math.abs(remain))}</div><div class="stat-lbl">${remain>=0?'المتبقي':'التجاوز'} AED</div></div>
     </div>
-    <div><div style="display:flex;justify-content:space-between;font-size:.78rem;color:#94a3b8;margin-bottom:4px"><span>التقدم</span><span>${pct.toFixed(1)}%</span></div>
-    <div class="progress-wrap"><div class="progress-bar ${barCls}" style="width:${Math.min(pct,100)}%"></div></div></div>
-    ${pct>=90?'<div class="alert alert-r">⚠️ تحذير: تجاوز 90% من الميزانية!</div>':pct>=70?'<div class="alert alert-b">🔶 صُرف أكثر من 70%</div>':''}
-    ${topV.length?`<div class="sec-hdr">🏢 أكبر الموردين</div><div class="tbl-wrap"><table><thead><tr><th>المورد</th><th>الإجمالي AED</th></tr></thead><tbody>${topV.map(([v,a])=>`<tr><td>${trunc(v,18)}</td><td style="color:#38bdf8;font-weight:700">${fmt(a)}</td></tr>`).join('')}</tbody></table></div>`:''}
-    ${exp.length?`<div class="sec-hdr">📋 الفواتير (${exp.length})</div><div class="tbl-wrap"><table><thead><tr><th>رقم الفاتورة</th><th>المورد</th><th>الإجمالي</th><th>التاريخ</th></tr></thead><tbody>${exp.map(i=>`<tr><td>${trunc(i.invoice_number,12)}</td><td>${trunc(i.vendor_name,13)}</td><td style="color:#38bdf8;font-weight:700">${fmt(i.total_amount)}</td><td>${fmtDt(i.invoice_date)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-ico">📭</div><div>لا توجد فواتير</div></div>'}`;
+    <div style="margin:8px 0">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--txt2);margin-bottom:5px"><span>نسبة الصرف</span><span style="font-weight:700;color:${pct>=90?'var(--red)':pct>=70?'var(--orange)':'var(--green)'}">${pct.toFixed(1)}%</span></div>
+      <div class="progress-wrap"><div class="progress-bar ${barCls}" style="width:${Math.min(pct,100)}%"></div></div>
+    </div>
+    ${pct>=90?'<div class="alert alert-r">⚠️ تحذير: تجاوز 90% من الميزانية!</div>':pct>=70?'<div class="alert alert-gold">🔶 صُرف أكثر من 70% من الميزانية</div>':'<div class="alert alert-g">✅ الصرف ضمن الحدود الآمنة</div>'}
+    ${topV.length?`<div class="sec-hdr">🏢 أكبر الموردين</div><div class="tbl-wrap"><table><thead><tr><th>المورد</th><th>الإجمالي AED</th></tr></thead><tbody>${topV.map(([v,a])=>`<tr><td style="color:var(--txt)">${trunc(v,20)}</td><td style="color:var(--teal2);font-weight:700">${fmt(a)}</td></tr>`).join('')}</tbody></table></div>`:''}
+    ${exp.length?`<div class="sec-hdr">📋 الفواتير (${exp.length})</div><div class="tbl-wrap"><table><thead><tr><th>رقم الفاتورة</th><th>المورد</th><th>الإجمالي</th><th>التاريخ</th></tr></thead><tbody>${exp.map(i=>`<tr><td style="color:var(--txt3)">${trunc(i.invoice_number,12)}</td><td style="color:var(--txt)">${trunc(i.vendor_name,13)}</td><td style="color:var(--teal2);font-weight:700">${fmt(i.total_amount)}</td><td style="color:var(--txt3)">${fmtDt(i.invoice_date)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><div class="empty-ico">📭</div><div>لا توجد فواتير</div></div>'}`;
 }
 function switchTab(t){
   document.getElementById('tc-budget').style.display=t==='budget'?'block':'none';
@@ -430,7 +542,7 @@ function handleMat(){
     const wb=XLSX.read(e.target.result,{type:'array'});
     matRows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
     const cols=Object.keys(matRows[0]||{});
-    document.getElementById('mat-preview').innerHTML=`<div class="alert alert-g">✅ ${matRows.length} صف</div><div class="tbl-wrap"><table><thead><tr>${cols.map(c=>`<th>${trunc(c,12)}</th>`).join('')}</tr></thead><tbody>${matRows.slice(0,6).map(r=>`<tr>${cols.map(c=>`<td>${trunc(r[c],12)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    document.getElementById('mat-preview').innerHTML=`<div class="alert alert-g">✅ ${matRows.length} صف — ${cols.length} عمود</div><div class="tbl-wrap"><table><thead><tr>${cols.map(c=>`<th>${trunc(c,12)}</th>`).join('')}</tr></thead><tbody>${matRows.slice(0,5).map(row=>`<tr>${cols.map(c=>`<td>${trunc(row[c],12)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     document.getElementById('mat-btn').style.display='block';
   };
   r.readAsArrayBuffer(f);
@@ -441,10 +553,10 @@ async function estimateCost(){
   document.getElementById('mat-result').innerHTML='<div class="alert alert-b">⏳ جارٍ التحليل...</div>';
   try{
     const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-      body:JSON.stringify({system:'أنت مهندس تكاليف إماراتي. أجب بالعربية.',messages:[{role:'user',content:`قدّر تكلفة جدول المواد (${pn}) بالدرهم مع إجمالي الكميات وضريبة 5% وهامش 10%:\n${matRows.slice(0,50).map(r=>JSON.stringify(r)).join('\n')}`}]})});
+      body:JSON.stringify({system:'أنت مهندس تكاليف إماراتي خبير. أجب بالعربية.',messages:[{role:'user',content:`قدّر تكلفة جدول المواد (${pn}) بالدرهم مع إجمالي الكميات وضريبة 5% وهامش ربح 10%:\n${matRows.slice(0,50).map(r=>JSON.stringify(r)).join('\n')}`}]})});
     const d=await res.json();
     const txt=d?.content?.[0]?.text||d?.choices?.[0]?.message?.content||'لم أتمكن من التحليل';
-    document.getElementById('mat-result').innerHTML=`<div class="sec-hdr">📊 التقدير</div><div style="background:#1e293b;border-radius:12px;padding:14px;font-size:.82rem;line-height:1.7;border:1px solid #1e3a5f">${renderMd(txt)}</div>`;
+    document.getElementById('mat-result').innerHTML=`<div class="sec-hdr">📊 التقدير</div><div style="background:var(--card2);border-radius:14px;padding:16px;font-size:.82rem;line-height:1.7;border:1px solid var(--border)">${renderMd(txt)}</div>`;
     document.getElementById('mat-dl').style.display='block';
   }catch(e){document.getElementById('mat-result').innerHTML=`<div class="alert alert-r">❌ ${esc(e.message)}</div>`;}
 }
@@ -455,6 +567,22 @@ function exportMat(){
 }
 
 // ── VAT ──
+function renderVatDeadline(){
+  const today=new Date(), m=today.getMonth();
+  const dl=new Date(today.getFullYear(),6,28);
+  const dL=Math.ceil((dl-today)/86400000);
+  const el=document.getElementById('vat-deadline-alert');
+  if(m>=4&&m<=6){
+    if(dL<=14&&dL>0)
+      el.innerHTML=`<div class="alert alert-r">🚨 متبقي <strong>${dL} يوم</strong> فقط على الموعد النهائي!</div>`;
+    else if(dL<=0)
+      el.innerHTML=`<div class="alert alert-r">🚨 انتهى الموعد! يرجى التواصل مع الهيئة الاتحادية للضرائب.</div>`;
+    else
+      el.innerHTML=`<div class="alert alert-gold">⏰ متبقي <strong>${dL} يوم</strong> على موعد تقديم الإقرار</div>`;
+  } else {
+    el.innerHTML='';
+  }
+}
 function initVatDates(){
   if(!document.getElementById('vat-from').value){
     const y=new Date().getFullYear();
@@ -470,28 +598,28 @@ function loadVat(){
   const rvV=rev.reduce((s,i)=>s+(+i.vat_amount||0),0), exV=exp.reduce((s,i)=>s+(+i.vat_amount||0),0);
   const rvT=rev.reduce((s,i)=>s+(+i.taxable_amount||0),0), exT=exp.reduce((s,i)=>s+(+i.taxable_amount||0),0);
   const rvTot=rev.reduce((s,i)=>s+(+i.total_amount||0),0), exTot=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
-  const nV=rvV-exV, nc=nV>0?'r':'g', nl=nV>0?'واجب السداد':'مستحق الاسترداد';
+  const nV=rvV-exV;
   document.getElementById('vat-stats').innerHTML=`
     <div class="stat-grid" style="margin-top:10px">
       <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g">${fmtD(rvV)}</div><div class="stat-lbl">ضريبة المخرجات</div></div>
       <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val o">${fmtD(exV)}</div><div class="stat-lbl">ضريبة المدخلات</div></div>
-      <div class="stat-card full"><div class="stat-icon">🏛️</div><div class="stat-val ${nc}">${fmtD(Math.abs(nV))} AED</div><div class="stat-lbl">صافي VAT — ${nl}</div></div>
+      <div class="stat-card full"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'r':'g'}">${fmtD(Math.abs(nV))} AED</div><div class="stat-lbl">صافي VAT — ${nV>0?'واجب السداد':'مستحق الاسترداد'}</div></div>
     </div>`;
   document.getElementById('vat-chart-box').style.display='block';
   if(vatChrt)vatChrt.destroy();
-  vatChrt=new Chart(document.getElementById('vat-chart'),{type:'bar',data:{labels:['مخرجات','مدخلات','صافي'],datasets:[{data:[rvV,exV,nV],backgroundColor:['rgba(34,197,94,.7)','rgba(249,115,22,.7)','rgba(56,189,248,.7)'],borderRadius:8}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtD(c.raw)} AED`}}},scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+  vatChrt=new Chart(document.getElementById('vat-chart'),{type:'bar',data:{labels:['مخرجات','مدخلات','صافي'],datasets:[{data:[rvV,exV,nV],backgroundColor:['rgba(16,185,129,.75)','rgba(249,115,22,.75)','rgba(99,102,241,.75)'],borderRadius:10,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtD(c.raw)} AED`}}},scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{display:false}},y:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
   document.getElementById('vat-table').innerHTML=`
-    <div class="sec-hdr" style="margin-top:14px">📋 ملخص الإقرار</div>
+    <div class="sec-hdr" style="margin-top:14px">📋 ملخص الإقرار الضريبي</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>البند</th><th>المبلغ AED</th></tr></thead>
       <tbody>
-        <tr><td>الإيرادات الخاضعة</td><td style="color:#22c55e;font-weight:700">${fmtD(rvT)}</td></tr>
-        <tr><td>ضريبة المخرجات 5%</td><td style="color:#22c55e;font-weight:700">${fmtD(rvV)}</td></tr>
-        <tr><td>إجمالي الإيرادات</td><td style="color:#22c55e">${fmtD(rvTot)}</td></tr>
-        <tr><td>المصروفات الخاضعة</td><td style="color:#f97316;font-weight:700">${fmtD(exT)}</td></tr>
-        <tr><td>ضريبة المدخلات 5%</td><td style="color:#f97316;font-weight:700">${fmtD(exV)}</td></tr>
-        <tr><td>إجمالي المصروفات</td><td style="color:#f97316">${fmtD(exTot)}</td></tr>
-        <tr style="border-top:2px solid #334155"><td><strong>▶ صافي VAT</strong></td><td style="color:${nc==='r'?'#ef4444':'#22c55e'};font-weight:900;font-size:1rem">${fmtD(nV)}</td></tr>
+        <tr><td>الإيرادات الخاضعة للضريبة</td><td style="color:var(--green);font-weight:700">${fmtD(rvT)}</td></tr>
+        <tr><td>ضريبة المخرجات 5%</td><td style="color:var(--green);font-weight:700">${fmtD(rvV)}</td></tr>
+        <tr><td>إجمالي الإيرادات</td><td style="color:var(--green)">${fmtD(rvTot)}</td></tr>
+        <tr><td>المصروفات الخاضعة للضريبة</td><td style="color:var(--orange);font-weight:700">${fmtD(exT)}</td></tr>
+        <tr><td>ضريبة المدخلات 5%</td><td style="color:var(--orange);font-weight:700">${fmtD(exV)}</td></tr>
+        <tr><td>إجمالي المصروفات</td><td style="color:var(--orange)">${fmtD(exTot)}</td></tr>
+        <tr style="border-top:2px solid var(--border2)"><td><strong style="color:#fff">▶ صافي VAT المستحق</strong></td><td style="color:${nV>0?'var(--red)':'var(--green)'};font-weight:900;font-size:1rem">${fmtD(nV)}</td></tr>
       </tbody>
     </table></div>`;
   document.getElementById('vat-dl').style.display='block';
@@ -503,10 +631,10 @@ function exportVat(){
   const rev=vatData.filter(i=>i.type==='revenue'), exp=vatData.filter(i=>i.type==='expense');
   if(rev.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(toR(rev)),'الإيرادات');
   if(exp.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(toR(exp)),'المصروفات');
-  XLSX.writeFile(wb,`VAT_${document.getElementById('vat-from').value}_${document.getElementById('vat-to').value}.xlsx`);
+  XLSX.writeFile(wb,`VAT_${document.getElementById('vat-from').value}_to_${document.getElementById('vat-to').value}.xlsx`);
 }
 
-// ── المساعد ──
+// ── المساعد الذكي ──
 async function sendMsg(){
   const inp=document.getElementById('chat-inp'), q=inp.value.trim(); if(!q)return;
   inp.value='';
@@ -515,9 +643,41 @@ async function sendMsg(){
   box.innerHTML+=`<div class="typing-dots" id="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
   box.scrollTop=box.scrollHeight;
   try{
-    const ctx=invoices.slice(0,80).map(i=>({رقم:i.invoice_number,مورد:i.vendor_name,مشروع:i.project,نوع:i.type==='expense'?'مصروف':'إيراد',إجمالي:i.total_amount,ضريبة:i.vat_amount,تاريخ:i.invoice_date}));
-    const pList=projects.map(p=>p.name).join('،');
-    const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({system:`أنت مساعد مالي لشركة "ماستر هيت" بالإمارات. المشاريع:${pList}. البيانات:\n${JSON.stringify(ctx)}\nأجب بالعربية باختصار. الضريبة 5%.`,messages:[{role:'user',content:q}]})});
+    const today=new Date();
+    const exp=invoices.filter(i=>i.type==='expense');
+    const rev=invoices.filter(i=>i.type==='revenue');
+    const tE=exp.reduce((s,i)=>s+(+i.total_amount||0),0);
+    const tR=rev.reduce((s,i)=>s+(+i.total_amount||0),0);
+    const vO=rev.reduce((s,i)=>s+(+i.vat_amount||0),0);
+    const vI=exp.reduce((s,i)=>s+(+i.vat_amount||0),0);
+    const pList=projects.map(p=>p.name).join('، ');
+    const ctx=invoices.slice(0,100).map(i=>({رقم:i.invoice_number,مورد:i.vendor_name,مشروع:i.project,نوع:i.type==='expense'?'مصروف':'إيراد',إجمالي:+i.total_amount||0,ضريبة:+i.vat_amount||0,تاريخ:i.invoice_date}));
+    const system=`أنت المحاسب الرئيسي لشركة "ماستر هيت للصيانة والمقاولات العامة" في دولة الإمارات العربية المتحدة.
+لديك صلاحية الوصول الكامل لجميع البيانات المالية للشركة وأنت المرجع الأول والأخير لكل الأسئلة المالية.
+
+📅 التاريخ اليوم: ${today.toLocaleDateString('ar-AE')}
+🏗️ المشاريع النشطة: ${pList}
+📊 إجمالي الفواتير: ${invoices.length} فاتورة
+
+💰 ملخص مالي:
+- إجمالي المصروفات: ${tE.toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
+- إجمالي الإيرادات: ${tR.toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
+- صافي الربح: ${(tR-tE).toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
+- ضريبة المخرجات: ${vO.toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
+- ضريبة المدخلات: ${vI.toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
+- صافي VAT المستحق: ${(vO-vI).toLocaleString('ar-AE',{minimumFractionDigits:2})} AED
+
+📋 بيانات الفواتير التفصيلية:
+${JSON.stringify(ctx)}
+
+تعليمات عملك:
+1. أجب مباشرةً وباحترافية عالية بالعربية دون إحالة لأي جهة خارجية
+2. أنت المحاسب — لديك كل الصلاحيات للإجابة على أي سؤال مالي
+3. قدّم الأرقام بدقة مع العملة (AED)
+4. للأسئلة عن الضريبة: الفترة الحالية مايو-يوليو 2026، الموعد 28 يوليو
+5. قدّم توصيات مالية عملية عند الحاجة
+6. إذا كان السؤال خارج نطاق البيانات المتاحة، وضّح ذلك واقترح الحل`;
+    const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({system,messages:[{role:'user',content:q}],max_tokens:1200})});
     const d=await res.json();
     const txt=d?.content?.[0]?.text||d?.choices?.[0]?.message?.content||'لم أتمكن من الإجابة.';
     document.getElementById('typing')?.remove();
@@ -531,7 +691,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
   await loadData();
   const l=document.getElementById('loader');
-  l.style.opacity='0'; setTimeout(()=>l.style.display='none',400);
+  l.style.opacity='0'; setTimeout(()=>l.style.display='none',500);
 });
 </script>
 </body>
