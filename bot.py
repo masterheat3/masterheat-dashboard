@@ -3,6 +3,7 @@ import io
 import json
 import base64
 import logging
+import traceback
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -23,7 +24,10 @@ SUPABASE_KEY   = os.getenv("SUPABASE_KEY")
 openai_client = OpenAI(api_key=OPENAI_KEY)
 supabase      = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # ─── المشاريع — تُحمَّل من Supabase ───
@@ -116,20 +120,24 @@ async def _show_invoice_result(update: Update, context: ContextTypes.DEFAULT_TYP
 
 # ─── /start ───
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await refresh_projects()
-    welcome = (
-        "🏗️ *مرحباً بك في نظام ماسترهيت للمقاولات*\n\n"
-        "أنا بوت ذكي لإدارة الفواتير. إليك ما أقدر أسويه:\n\n"
-        "📸 *إرسال فاتورة صورة* — JPG / PNG / WebP\n"
-        "📄 *إرسال فاتورة PDF* — يُقرأ تلقائياً\n"
-        "🤖 *المساعد الذكي* — اسألني عن فواتيرك\n"
-        "📊 *التقرير الضريبي* — /vat\n"
-        "📋 *آخر الفواتير* — /recent\n"
-        "🏗 *مصروفات مشروع* — /project\n"
-        "➕ *إضافة مشروع* — /addproject اسم المشروع\n\n"
-        "ابدأ بإرسال صورة أو PDF فاتورة! 📸"
-    )
-    await update.message.reply_text(welcome, parse_mode="Markdown")
+    try:
+        await refresh_projects()
+        welcome = (
+            "🏗️ *مرحباً بك في نظام ماسترهيت للمقاولات*\n\n"
+            "أنا بوت ذكي لإدارة الفواتير. إليك ما أقدر أسويه:\n\n"
+            "📸 *إرسال فاتورة صورة* — JPG / PNG / WebP\n"
+            "📄 *إرسال فاتورة PDF* — يُقرأ تلقائياً\n"
+            "🤖 *المساعد الذكي* — اسألني عن فواتيرك\n"
+            "📊 *التقرير الضريبي* — /vat\n"
+            "📋 *آخر الفواتير* — /recent\n"
+            "🏗 *مصروفات مشروع* — /project\n"
+            "➕ *إضافة مشروع* — /addproject اسم المشروع\n\n"
+            "ابدأ بإرسال صورة أو PDF فاتورة! 📸"
+        )
+        await update.message.reply_text(welcome, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"start handler error: {e}\n{traceback.format_exc()}")
+        await update.message.reply_text("حدث خطأ. حاول مرة ثانية.")
 
 # ─── /addproject ───
 async def add_project(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -569,12 +577,33 @@ async def main_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await button_callback(update, context)
 
+# ─── global error handler ───
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.error(f"Exception: {context.error}\n{traceback.format_exc()}")
+    if isinstance(update, Update) and update.effective_message:
+        try:
+            await update.effective_message.reply_text(
+                f"❌ خطأ داخلي:\n`{str(context.error)[:300]}`",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+
 # ─── تشغيل البوت ───
 async def post_init(application: Application) -> None:
+    me = await application.bot.get_me()
+    logger.info(f"✅ Bot started: @{me.username} (id={me.id})")
     await refresh_projects()
     logger.info("✅ Projects loaded on startup")
 
 def main():
+    if not TELEGRAM_TOKEN:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN غير موجود في ملف .env")
+    if not OPENAI_KEY:
+        raise RuntimeError("OPENAI_API_KEY غير موجود في ملف .env")
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise RuntimeError("SUPABASE_URL / SUPABASE_KEY غير موجودة في ملف .env")
+
     print("MasterHeat Bot is starting...")
     app = (
         Application.builder()
@@ -591,6 +620,7 @@ def main():
     app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(CallbackQueryHandler(main_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, ai_assistant))
+    app.add_error_handler(error_handler)
 
     print("Bot is running! Press Ctrl+C to stop.")
     app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
