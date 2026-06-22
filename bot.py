@@ -179,7 +179,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         header = bytes(image_bytes[:4])
         if header[:4] == b'\x89PNG':
             mime = "image/png"
-        elif header[:2] == b'RI':
+        elif header[:4] == b'RIFF':
             mime = "image/webp"
         else:
             mime = "image/jpeg"
@@ -215,7 +215,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ أرسل الفاتورة كصورة (JPG/PNG) أو PDF فقط.")
         return
 
-    await update.message.reply_text("📄 DEBUG v5 — جارٍ قراءة الـ PDF...")
+    await update.message.reply_text("📄 جارٍ قراءة الـ PDF وتحليل الفاتورة...")
     await refresh_projects()
 
     try:
