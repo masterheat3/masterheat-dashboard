@@ -17,9 +17,19 @@ from telegram.ext import (
 # ─── الإعدادات ───
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_KEY     = os.getenv("OPENAI_API_KEY")  # مستخدم أيضاً في HTTP مباشر
+OPENAI_KEY     = os.getenv("OPENAI_API_KEY")
 SUPABASE_URL   = os.getenv("SUPABASE_URL")
 SUPABASE_KEY   = os.getenv("SUPABASE_KEY")
+
+# التحقق من المتغيرات قبل تهيئة الـ clients
+_missing = [n for n, v in [
+    ("TELEGRAM_BOT_TOKEN", TELEGRAM_TOKEN),
+    ("OPENAI_API_KEY",     OPENAI_KEY),
+    ("SUPABASE_URL",       SUPABASE_URL),
+    ("SUPABASE_KEY",       SUPABASE_KEY),
+] if not v]
+if _missing:
+    raise RuntimeError(f"❌ المتغيرات التالية ناقصة في ملف .env: {', '.join(_missing)}")
 
 openai_client = OpenAI(api_key=OPENAI_KEY)
 supabase      = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -597,13 +607,6 @@ async def post_init(application: Application) -> None:
     logger.info("✅ Projects loaded on startup")
 
 def main():
-    if not TELEGRAM_TOKEN:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN غير موجود في ملف .env")
-    if not OPENAI_KEY:
-        raise RuntimeError("OPENAI_API_KEY غير موجود في ملف .env")
-    if not SUPABASE_URL or not SUPABASE_KEY:
-        raise RuntimeError("SUPABASE_URL / SUPABASE_KEY غير موجودة في ملف .env")
-
     print("MasterHeat Bot is starting...")
     app = (
         Application.builder()
