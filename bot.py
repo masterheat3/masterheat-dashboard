@@ -601,6 +601,8 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
 # ─── تشغيل البوت ───
 async def post_init(application: Application) -> None:
+    # حذف أي webhook قديم — يمنع تعارض 409 مع polling
+    await application.bot.delete_webhook(drop_pending_updates=True)
     me = await application.bot.get_me()
     logger.info(f"✅ Bot started: @{me.username} (id={me.id})")
     await refresh_projects()
