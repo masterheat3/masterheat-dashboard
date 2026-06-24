@@ -6,4 +6,3 @@ supabase
 python-dotenv
 openai
 pdfplumber
-python-telegram-bot[job-queue]
