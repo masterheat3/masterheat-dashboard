@@ -27,8 +27,9 @@
   --green:#10b981;--red:#ef4444;--orange:#f97316;
   --txt:#e2e8f0;--txt2:#94a3b8;--txt3:#475569;
 }
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-.page{display:none;padding:0 12px 90px;max-width:500px;margin:0 auto}
+html{background:var(--bg)}
+body{font-family:'Tajawal',sans-serif;background:transparent;color:var(--txt);direction:rtl;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.page{display:none;padding:0 12px 90px;max-width:500px;margin:0 auto;position:relative;z-index:1}
 .page.active{display:block}
 
 /* ── Topbar ── */
@@ -150,9 +151,68 @@ select.inp{cursor:pointer}
 .vat-period-banner .period-label{color:var(--gold2);font-size:.78rem;font-weight:700;margin-bottom:4px}
 .vat-period-banner .period-dates{color:#fff;font-size:1rem;font-weight:900}
 .vat-period-banner .period-sub{color:var(--txt3);font-size:.72rem;margin-top:4px}
+
+/* ═══════════ تحسينات الحيوية والحركة ═══════════ */
+/* خلفية متوهّجة متحركة */
+.bg-ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(72px);opacity:.5;will-change:transform}
+.orb1{width:280px;height:280px;background:radial-gradient(circle,var(--pri),transparent 70%);top:-70px;right:-60px;animation:float 20s ease-in-out infinite}
+.orb2{width:240px;height:240px;background:radial-gradient(circle,var(--teal),transparent 70%);top:42%;left:-90px;animation:float 24s ease-in-out infinite -7s}
+.orb3{width:200px;height:200px;background:radial-gradient(circle,var(--gold),transparent 70%);bottom:-50px;right:18%;opacity:.32;animation:float 28s ease-in-out infinite -14s}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(22px,-32px) scale(1.08)}66%{transform:translate(-18px,22px) scale(.94)}}
+
+/* انتقال دخول الصفحة */
+.page.active{animation:pageIn .45s cubic-bezier(.22,1,.36,1)}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* دخول البطاقات بالتتابع */
+.page.active .stat-card{animation:cardIn .55s cubic-bezier(.22,1,.36,1) both}
+.page.active .stat-card:nth-child(1){animation-delay:.04s}
+.page.active .stat-card:nth-child(2){animation-delay:.11s}
+.page.active .stat-card:nth-child(3){animation-delay:.18s}
+.page.active .stat-card:nth-child(4){animation-delay:.25s}
+.page.active .stat-card:nth-child(5){animation-delay:.32s}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* لمعان يمر على بطاقات الإحصاء */
+.stat-card::after{content:'';position:absolute;top:0;left:-70%;width:55%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.07),transparent);transform:skewX(-22deg);animation:sheen 7s ease-in-out infinite;pointer-events:none}
+@keyframes sheen{0%,72%{left:-70%}86%,100%{left:140%}}
+.stat-card.full{background:linear-gradient(135deg,var(--card),var(--card2))}
+
+/* توهّج خفيف لأرقام الإحصاء */
+.stat-val{text-shadow:0 0 16px currentColor}
+
+/* نص متدرّج متحرّك للعناوين */
+.loader-txt,.topbar-title{background:linear-gradient(90deg,var(--pri2),var(--teal2),var(--gold2),var(--pri2));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:grad 7s linear infinite}
+@keyframes grad{to{background-position:300% 0}}
+
+/* نبض أيقونة التنقّل النشطة */
+.nav-item.active .nav-ico{animation:pop .45s cubic-bezier(.22,1.6,.36,1)}
+@keyframes pop{0%{transform:scale(.8)}55%{transform:scale(1.28)}100%{transform:scale(1)}}
+
+/* تنبيهات تدخل بانزلاق ناعم */
+.alert{animation:slideIn .42s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+
+/* زر التحديث يدور أثناء التحميل */
+.topbar-refresh.spinning{animation:spin .8s linear infinite;color:var(--pri2);border-color:var(--pri)}
+
+/* لمعان يمر على الأزرار عند الضغط */
+.btn{position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;top:0;left:-110%;width:65%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-22deg);transition:left .55s ease;pointer-events:none}
+.btn:active::after{left:150%}
+
+/* احترام تفضيل تقليل الحركة */
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+
+<div class="bg-ambient" aria-hidden="true">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
 
 <div class="loader" id="loader">
   <div class="loader-ring"></div>
@@ -350,6 +410,18 @@ function renderMd(t){
     .replace(/\n/g,'<br>');
 }
 
+// ── عدّاد تصاعدي للأرقام (حيوية) ──
+function countUp(el){
+  const target=+el.dataset.target||0, dec=el.dataset.dec==='1';
+  const dur=900, t0=performance.now();
+  (function step(now){
+    const p=Math.min((now-t0)/dur,1), e=1-Math.pow(1-p,3), v=target*e;
+    el.textContent=dec?fmtD(v):fmt(v);
+    if(p<1)requestAnimationFrame(step);
+  })(t0);
+}
+function animateStats(c){ if(!c)return; c.querySelectorAll('[data-target]').forEach((el,i)=>setTimeout(()=>countUp(el),i*70)); }
+
 // ── تحميل البيانات ──
 async function loadData(){
   try{
@@ -361,7 +433,7 @@ async function loadData(){
     renderHome(); populateFilters(); renderProjCards();
   }catch(e){console.error(e);}
 }
-function refreshData(){ loadData(); const r=document.querySelector('.page.active')?.id?.replace('page-',''); if(r==='invoices')filterInv(); }
+async function refreshData(){ const b=document.querySelector('.topbar-refresh'); if(b)b.classList.add('spinning'); await loadData(); if(b)b.classList.remove('spinning'); const r=document.querySelector('.page.active')?.id?.replace('page-',''); if(r==='invoices')filterInv(); }
 
 // ── التنقل ──
 const META={home:['ماستر هيت','للمقاولات العامة'],projects:['المشاريع','التحليل المالي'],vat:['تقرير الضريبة','UAE VAT'],invoices:['الفواتير','السجلات المالية'],ai:['المحاسب الذكي','مساعدك المالي']};
@@ -407,18 +479,19 @@ function renderHome(){
   }
 
   document.getElementById('home-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val r">${fmt(tE)}</div><div class="stat-lbl">المصروفات AED</div></div>
-    <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g">${fmt(tR)}</div><div class="stat-lbl">الإيرادات AED</div></div>
-    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val ${pf>=0?'g':'r'}">${fmt(Math.abs(pf))}</div><div class="stat-lbl">${pf>=0?'صافي الربح':'صافي الخسارة'} AED</div></div>
-    <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'o':'t'}">${fmt(Math.abs(nV))}</div><div class="stat-lbl">${nV>0?'VAT مستحق':'VAT مسترد'} AED</div></div>
+    <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val r" data-target="${tE}">0</div><div class="stat-lbl">المصروفات AED</div></div>
+    <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g" data-target="${tR}">0</div><div class="stat-lbl">الإيرادات AED</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val ${pf>=0?'g':'r'}" data-target="${Math.abs(pf)}">0</div><div class="stat-lbl">${pf>=0?'صافي الربح':'صافي الخسارة'} AED</div></div>
+    <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'o':'t'}" data-target="${Math.abs(nV)}">0</div><div class="stat-lbl">${nV>0?'VAT مستحق':'VAT مسترد'} AED</div></div>
     <div class="stat-card full" onclick="goTo('projects')">
       <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-        <div><div class="stat-icon">🏗️</div><div class="stat-val">${aP}</div><div class="stat-lbl">مشروع نشط</div></div>
+        <div><div class="stat-icon">🏗️</div><div class="stat-val" data-target="${aP}">0</div><div class="stat-lbl">مشروع نشط</div></div>
         <div style="width:1px;height:40px;background:var(--border)"></div>
-        <div><div class="stat-icon">📋</div><div class="stat-val">${invoices.length}</div><div class="stat-lbl">فاتورة مسجلة</div></div>
+        <div><div class="stat-icon">📋</div><div class="stat-val" data-target="${invoices.length}">0</div><div class="stat-lbl">فاتورة مسجلة</div></div>
       </div>
       <div style="color:var(--txt3);font-size:.68rem;margin-top:8px">اضغط لتفاصيل المشاريع ←</div>
     </div>`;
+  animateStats(document.getElementById('home-stats'));
 
   const pe={};
   exp.forEach(i=>{const p=i.project||'غير محدد';pe[p]=(pe[p]||0)+(+i.total_amount||0);});
@@ -702,10 +775,11 @@ function loadVat(){
   const nV=rvV-exV;
   document.getElementById('vat-stats').innerHTML=`
     <div class="stat-grid" style="margin-top:10px">
-      <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g">${fmtD(rvV)}</div><div class="stat-lbl">ضريبة المخرجات</div></div>
-      <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val o">${fmtD(exV)}</div><div class="stat-lbl">ضريبة المدخلات</div></div>
-      <div class="stat-card full"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'r':'g'}">${fmtD(Math.abs(nV))} AED</div><div class="stat-lbl">صافي VAT — ${nV>0?'واجب السداد':'مستحق الاسترداد'}</div></div>
+      <div class="stat-card"><div class="stat-icon">📥</div><div class="stat-val g" data-target="${rvV}" data-dec="1">0</div><div class="stat-lbl">ضريبة المخرجات</div></div>
+      <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-val o" data-target="${exV}" data-dec="1">0</div><div class="stat-lbl">ضريبة المدخلات</div></div>
+      <div class="stat-card full"><div class="stat-icon">🏛️</div><div class="stat-val ${nV>0?'r':'g'}"><span data-target="${Math.abs(nV)}" data-dec="1">0</span> AED</div><div class="stat-lbl">صافي VAT — ${nV>0?'واجب السداد':'مستحق الاسترداد'}</div></div>
     </div>`;
+  animateStats(document.getElementById('vat-stats'));
   document.getElementById('vat-chart-box').style.display='block';
   if(vatChrt)vatChrt.destroy();
   vatChrt=new Chart(document.getElementById('vat-chart'),{type:'bar',data:{labels:['مخرجات','مدخلات','صافي'],datasets:[{data:[rvV,exV,nV],backgroundColor:['rgba(16,185,129,.75)','rgba(249,115,22,.75)','rgba(99,102,241,.75)'],borderRadius:10,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtD(c.raw)} AED`}}},scales:{x:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:11}},grid:{display:false}},y:{ticks:{color:'#94a3b8',font:{family:'Tajawal',size:10},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
